@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_login.css') }}">
+</head>
+<body>
+    <div class="header">
+        <h1> </h1>
+        <!-- Logo, asegúrate que la ruta sea correcta y el tamaño adecuado -->
+        <img src="{{ url_for('static', filename='imagen/logo-clt.png') }}" 
+             alt="Logo" class="logo">
+<br> 
+</br>
+    </div>
+    <div class="form-container">
+        <h1>Inicio de Sesión</h1>
+        <form action="{{ url_for('login') }}" method="POST">
+           <!--div class="input-group">
+                <label for="id_cliente"> </label>
+                <input type="text" id="id_cliente" name="id_cliente" required value="99" style="display: none;">
+                <input type="text" id="id_cliente_display" name="id_cliente_display" required style="display: none;">  
+                
+            </div>
+        -->
+        <br>  <!-- Salto de línea agregado -->
+            <div class="input-group">
+                <label for="id_usuario">ID Usuario:</label>
+                <input type="text" id="id_usuario" name="id_usuario" required>
+            </div>
+
+            <div class="input-group">
+                <label for="pwd">Contraseña:</label>
+                <input type="password" id="pwd" name="pwd" required>
+            </div>
+            <br> 
+        </br>
+            <button type="submit">Ingresar</button>
+        </form>
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú de Acceso</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
+</head>
+
+<body>
+    <div class="info-bar">
+        <span>ID Cliente: {{ ID_CLIENTE }}</span>
+        <span>ID Usuario: {{ id_usuario }}</span>
+        <span>Fecha y Hora: {{ fecha_hora }}</span>
+    </div>
+
+    <img src="{{ url_for('static', filename='imagen/logo-clt.png') }}" 
+    alt="Logo" class="logotwo">
+
+    <nav class="navbar">
+        <ul>
+            <!-- Verificar si el menú tiene elementos -->
+            {% if menu %}
+                {% for item in menu %}
+                    <li class="parent-item">
+                        <a href="{{ url_for(item['path']) }}">{{ item['descripcion'] }}</a>
+                        <ul class="submenu">
+                            {% for child in item['hijos'] %}
+                                <li>
+                                    <!-- Mostrar el texto del nodo hijo sin enlace -->
+                                    <span>{{ child['descripcion'] }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            {% else %}
+                <li>No se encontraron elementos en el menú.</li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <div class="content"> <!-- Agregar un contenedor para el contenido -->
+        <h1>Menú de Acceso</h1>
+        <a href="{{ url_for('login') }}">Cerrar sesión</a>
+
+        <!-- Mostrar el JSON en bruto para fines de depuración -->
+        <pre class="json-text" id="json-output"></pre>
+    </div>
+
+    <script>
+        // Mostrar el JSON en bruto en el área de depuración
+        const menuData = {{ menu | tojson }};
+        document.getElementById('json-output').textContent = JSON.stringify(menuData, null, 2);
+    </script>
+</body>
+
+</html>

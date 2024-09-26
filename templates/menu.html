@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú de Acceso</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
+
+</head>
+
+<body>
+    <div class="info-bar">
+        <img src="{{ url_for('static', filename='imagen/logo-clt.png') }}" 
+             alt="Logo de la Empresa" class="logotwo">
+        <span>Cliente: VIVO - Solutions 2 GO<!--{{ ID_CLIENTE }}--></span>
+        <span>Usuario: {{ id_usuario.upper() }}</span>
+        <span>Fecha y Hora: {{ fecha_hora }}</span>
+        <div class="cerrar-sesion">
+            <a href="{{ url_for('index') }}">Cerrar Sesión</a>
+        </div>
+    </div>
+    
+
+    <nav class="navbar">
+        <ul>
+            {% if menu %}
+                {% for item in menu %}
+                    <li>
+                        <a href="#">{{ item['descripcion'] }}</a>
+                        {% if item['hijos'] %}
+                            <ul class="submenu">
+                                {% for child in item['hijos'] %}
+                                    <li>
+                                        <a href="{{ url_for(child['path']) }}">{{ child['descripcion'] }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            {% else %}
+                <li>No se encontraron elementos en el menú.</li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <div class="content">
+        <h1>Menú de Acceso</h1>
+    </div>
+
+</body>
+
+<footer>
+    <p>© 2024 Todos los derechos reservados.</p>
+</footer>
+
+</html>
+

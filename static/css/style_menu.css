@@ -1,0 +1,172 @@
+/* Barra superior*/
+.info-bar {
+    background: linear-gradient(0deg, #74A8ED, #d0f0fd);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    font-family: 'Roboto', sans-serif;
+    font-weight: bolder;
+    color: #415FFF;
+    height: 25px;
+}
+
+/* Contenedor del botón "Cerrar sesión" */
+.cerrar-sesion {
+    margin-left: unset;
+    /* Mueve el enlace a la derecha */
+    display: fixed;
+    /* Usar flexbox */
+    justify-content: center;
+    /* Centra el enlace */
+    align-items: center;
+    margin-left: 8px;
+    /* Ajusta este valor para mover el botón más a la izquierda */
+}
+
+.cerrar-sesion a {
+    background-color: #d0f0fd;
+    color: #415FFF;
+    padding: 8px 12px;
+    border-radius: 15px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.cerrar-sesion a:hover {
+    background-color: #1abc9c;
+    /* Color del enlace al pasar el ratón */
+}
+
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #ecf0f1;
+    margin-left: 0%;
+    top: 0%;
+
+}
+
+/* Logo */
+.logotwo {
+    width: 120px;
+    height: auto;
+    margin-right: 10px;
+}
+
+/* Menú lateral */
+.navbar {
+    background-color: #74A8ED;
+    padding: 15px;
+    width: 250px;
+    position: fixed;
+    top: 45px;
+    bottom: 0;
+    left: 0;
+    z-index: 98;
+    font-family: 'Roboto', sans-serif;
+    font-weight: bolder;
+    font-size: 1rem;
+    color: #415FFF;
+    overflow-y: auto;
+    border-top-right-radius: 1px;
+}
+
+.navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar ul li {
+    padding: 10px 0;
+}
+
+.navbar ul li a {
+    /*color: #415FFF;*/
+    color: white;
+    text-decoration: none;
+    padding: 10px;
+    display: block;
+    font-weight: lighter;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.navbar ul li a:hover {
+    background-color: #1abc9c;
+    color: white;
+}
+
+.navbar ul li ul.submenu {
+    display: none;
+    background-color: #2c3e50;
+    padding-left: 5px;
+    border-radius: 10px;
+    padding: 5px;
+}
+
+.navbar ul li:hover ul.submenu {
+    display: block;
+}
+
+.navbar ul li ul.submenu li a {
+    padding: 8px;
+    color: #bdc3c7;
+
+    border-radius: 10px;
+    font-weight: lighter;
+
+}
+
+.navbar ul li ul.submenu li a:hover {
+    background-color: #1abc9c;
+    color: white;
+    border-radius: 10px;
+
+}
+
+/* Contenido */
+.content {
+    margin-left: 250px;
+    margin-top: 80px;
+    /* Ajusta para evitar que se sobreponga a la barra superior */
+    padding: 30px;
+    background-color: #ecf0f1;
+    border-radius: 15px;
+    max-width: 1100px;
+    margin-right: auto;
+    margin-left: auto;
+    min-height: calc(100vh - 100px);
+    /* Asegura que el contenido llene la pantalla */
+    /*Eliminado: box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);*/
+}
+
+h1 {
+    text-align: center;
+    font-size: 1.5rem;
+    color: #5d5d5d;
+    position: fixed;
+    top: 5%;
+    margin-left: 0%;
+
+}
+
+/* Pie de página */
+footer {
+    background: #ffffff;
+    /*linear-gradient(90deg, #74A8ED, #d0f0fd);*/
+    text-align: center;
+    /*  background-color: #d0f0fd;*/
+    color: #000000;
+    font-weight: lighter;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+}

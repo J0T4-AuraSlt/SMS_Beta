@@ -1,0 +1,144 @@
+/* Estilos específicos para login.html */
+
+.logo {
+    width: 500px;
+    height: auto;
+    margin-top: 10px;
+    margin-bottom: 30px;
+    /* Espacio entre el logo y el body */
+}
+
+/* General */
+body {
+    font-family: 'Montserrat', sans-serif;
+    margin: 0;
+    background-color: #ffffff;
+    /* Fondo blanco para contraste */
+    font-size: 16px;
+    font-weight: 400;
+    color: #34495e;
+    /* Color de texto moderno */
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+
+}
+
+/* Estilo del encabezado */
+h1 {
+    color: #34495e;
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Estilo del formulario */
+.form-container {
+    background-color: #d0f0fd;
+    padding: 45px;
+    border-radius: 10px;
+    max-width: 450px;
+    width: 100%;
+    box-shadow: 0px 4px 10px rgba(147, 201, 221, 0.5);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* Asegura que el contenido esté centrado verticalmente */
+}
+
+/* Estilo para los inputs */
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    /* Full width */
+    padding: 15px;
+    margin: 10px 0;
+    border: 1px solid #74A8ED;
+    /* Borde azul */
+    border-radius: 5px;
+    background-color: #f0f8ff;
+    /* Fondo más claro para inputs */
+    color: #34495e;
+    /* Color de texto oscuro para contraste */
+    font-size: 1rem;
+    text-align: left;
+    /* Centra el texto dentro de los campos */
+}
+
+/* Placeholder de los inputs */
+input[type="text"]::placeholder,
+input[type="password"]::placeholder {
+    color: #b0b0b0;
+    /* Color del placeholder */
+}
+
+/* Botón */
+button {
+    width: 110%;
+    /* Ajusta el ancho del botón */
+    padding: 12px;
+    /* Ajusta el padding para que sea más pequeño */
+    background-color: #74A8ED;
+    /* Color de fondo azul */
+    color: #ffffff;
+    /* Color del texto en el botón */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    margin-top: 15px;
+    /* Espacio superior para separación */
+}
+
+button:hover {
+    background-color: #1abc9c;
+    /* Color de hover moderno */
+}
+
+/* Texto de error */
+p {
+    color: #fa0505;
+    /* Color para mensajes de error */
+    text-align: center;
+}
+
+/* Espaciado para evitar que el contenido quede detrás del formulario */
+.content {
+    margin-top: 60px;
+    /* Ajusta esto según el diseño */
+}
+
+/* Estilos de enlaces (como el botón Cerrar sesión) */
+a {
+    display: block;
+    width: 80%;
+    /* Ajusta el ancho del enlace */
+    max-width: 200px;
+    margin: 20px auto;
+    padding: 15px;
+    background-color: #74A8ED;
+    /* Color de fondo para el enlace */
+    color: #ffffff;
+    /* Color del texto en el enlace */
+    text-align: center;
+    /* Centra el texto */
+    text-decoration: none;
+    /* Sin subrayado */
+    border-radius: 5px;
+    /* Esquinas redondeadas */
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+a:hover {
+    background-color: #1abc9c;
+    /* Color de hover para el enlace */
+}
