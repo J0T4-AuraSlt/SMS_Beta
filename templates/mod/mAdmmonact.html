@@ -1,36 +1,109 @@
+
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administracion, Monitoreo de Actividad de Usuarios </title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
+    <title>Administracion, Monitoreo de Actividad de Usuarios</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
 </head>
-
 <body>
-    <div class="info-bar">
-        <img src="{{ url_for('static', filename='imagen/logo-clt.png') }}" alt="Logo de la Empresa" class="logotwo">
-        <span>Cliente: {{ ID_CLIENTE }}</span>
-        <span>Usuario: {{ id_usuario.upper() }}</span>
-        <span>Fecha y Hora: {{ fecha_hora }}</span>
-        <a href="{{ url_for('menu') }}">Volver al Menú</a>
-        <a href="{{ url_for('index') }}">Cerrar sesión</a>
-    </div>
+<div class="container2">
+    <h1>Monitoreo de Actividad de Usuarios</h1>
+    <br>
 
-    <nav class="navbar">
-        <ul>
-        </ul>
-    </nav>
+</br>
 
-    <div class="content">
-        <h1>Administracion, Monitoreo de Actividad de Usuarios</h1>
-    </div>
+    <form id="configForm">
+
+        <!-- Nombre del Archivo -->
+        <label for="archivo">Nombre del Archivo:</label>
+        <input type="text" id="archivo" name="archivo" placeholder="Ingrese el nombre del archivo">
+
+        <!-- Formato -->
+        <label for="formato">Formato del Archivo:</label>
+        <select id="formato" name="formato">
+            <option value="excel">Excel</option>
+            <option value="csv">CSV</option>
+            <option value="txt">TXT</option>
+        </select>
+
+        <!-- Separación de caracteres -->
+        <label for="separacion">Separación de Caracteres:</label>
+        <input type="text" id="separacion" name="separacion" placeholder="Ingrese el separador de caracteres">
+
+        <!-- Campos que se deben leer -->
+        <div class="dynamic-fields" id="dynamicFields">
+            <label>Campos que se deben leer desde el archivo:</label>
+            <div class="field">
+                <div class="field">
+                    <div>
+                        <input type="text" placeholder="Nombre del campo" name="campo[]">
+                    </div>
+                    <div>
+                        <select name="tipoDato[]">
+                            <option value="text">Texto</option>
+                            <option value="integer">Entero</option>
+                            <option value="decimal">Decimal</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select name="obligatorio[]">
+                            <option value="si">Sí</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <buttoN type="buttoN" class="add-field" onclick="agregarCampo()">Agregar Campo</buttoN>
+
+        <!-- Frecuencia de Ejecución -->
+        <label for="frecuencia">Frecuencia de Ejecución:</label>
+        <input type="text" id="frecuencia" name="frecuencia" placeholder="Ingrese la frecuencia de ejecución">
+
+        <!-- Fecha de Próxima Ejecución -->
+        <label for="fecha">Fecha de Próxima Ejecución:</label>
+        <input type="date" id="fecha" name="fecha">
+
+        <!-- Botones de Guardar y Cancelar -->
+        <buttoN type="submit">Guardar Configuración</buttoN>
+        <buttoN type="buttoN" class="delete-field" onclick="limpiarFormulario()">Cancelar</buttoN>
+    </form>
+</div>
+
+<script>
+    function agregarCampo() {
+        // Crear nuevo grupo de campos
+        const campoHTML = `
+            <div class="field">
+                <div class="field-group">
+                    <div>
+                        <input type="text" placeholder="Nombre del campo" name="campo[]">
+                    </div>
+                    <div>
+                        <select name="tipoDato[]">
+                            <option value="text">Texto</option>
+                            <option value="integer">Entero</option>
+                            <option value="decimal">Decimal</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select name="obligatorio[]">
+                            <option value="si">Sí</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                </div>
+            </div>`;
+        document.getElementById('dynamicFields').insertAdjacentHTML('beforeend', campoHTML);
+    }
+
+    function limpiarFormulario() {
+        document.getElementById("configForm").reset();
+    }
+</script>
 
 </body>
-
-<footer>
-    <p>© 2024 Todos los derechos reservados.</p>
-</footer>
-
 </html>

@@ -128,10 +128,10 @@ def menu():
     ID_CLIENTE = session.get('ID_CLIENTE')
     id_usuario = session.get('id_usuario')
 
-    # if not ID_CLIENTE or not id_usuario:
-   #     print("Redireccionando a dev: falta ID_CLIENTE o id_usuario")
-    # Redirige si no hay datos en la sesión
-   #     return redirect(url_for('dev'))
+    # Verificar si hay sesión válida
+    if not ID_CLIENTE or not id_usuario:
+        print("Redireccionando a dev: falta ID_CLIENTE o id_usuario")
+        return redirect(url_for('dev'))
 
     menu_json = get_menu(ID_CLIENTE, id_usuario)
 
@@ -154,21 +154,33 @@ def menu():
                   [item['path']
                       for item in menu_json if item['tpo_nodo'] == 'HIJO']
 
+    # Verificar que el menú no esté vacío
     if not menu:
         print("Redireccionando a dev: menú vacío")
-        return redirect(url_for('dev'))  # Redirige si el menú está vacío
+        return redirect(url_for('dev'))
 
+    # Verificar que todos los paths sean válidos
     for item in menu:
         for hijo in item['hijos']:
             if hijo['path'] not in valid_paths:
                 print("Redireccionando a dev: path inválido")
-                # Redirige si hay paths inválidos
                 return redirect(url_for('dev'))
 
-    # Renderizar la plantilla 'menu.html' con el menú estructurado
+    # Renderizar la plantilla del menú
     return render_template('menu.html', menu=menu, id_usuario=id_usuario, ID_CLIENTE=ID_CLIENTE,
                            fecha_hora=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                            valid_paths=valid_paths)
+
+
+# Nueva ruta para manejar las solicitudes AJAX
+@app.route('/load_module/<path:modulo>')
+def load_module(modulo):
+    # Aquí puedes cargar el contenido del módulo solicitado
+    # Para este ejemplo, simplemente se devolverá una plantilla con el nombre del módulo
+    try:
+        return render_template(f'{modulo}.html')
+    except Exception as e:
+        return f"Error al cargar el módulo: {str(e)}"
 
 # Menu
 

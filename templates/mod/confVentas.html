@@ -1,18 +1,91 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administracion, Mantenimiento de Datos del Usuario</title>
+    <title>Configuración de Ventas Semanales</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .dynamic-fields {
+            margin-top: 20px;
+        }
+
+        .field {
+            margin-bottom: 10px;
+        }
+
+        .field-group {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .field-group > div {
+            width: 32%;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .add-field {
+            background-color: #2196F3;
+        }
+
+        .delete-field {
+            background-color: #f44336;
+        }
+    </style>
 </head>
 <body>
-<div class="container2">
-    <h1>Mantenimiento de Datos del Usuario</h1>
-    <br>
 
-</br>
+<div class="container">
+    <h1>Configuración de Ventas Semanales</h1>
 
     <form id="configForm">
 
@@ -36,7 +109,7 @@
         <div class="dynamic-fields" id="dynamicFields">
             <label>Campos que se deben leer desde el archivo:</label>
             <div class="field">
-                <div class="field">
+                <div class="field-group">
                     <div>
                         <input type="text" placeholder="Nombre del campo" name="campo[]">
                     </div>
@@ -57,7 +130,7 @@
             </div>
         </div>
 
-        <buttoN type="buttoN" class="add-field" onclick="agregarCampo()">Agregar Campo</buttoN>
+        <button type="button" class="add-field" onclick="agregarCampo()">Agregar Campo</button>
 
         <!-- Frecuencia de Ejecución -->
         <label for="frecuencia">Frecuencia de Ejecución:</label>
@@ -68,8 +141,8 @@
         <input type="date" id="fecha" name="fecha">
 
         <!-- Botones de Guardar y Cancelar -->
-        <buttoN type="submit">Guardar Configuración</buttoN>
-        <buttoN type="buttoN" class="delete-field" onclick="limpiarFormulario()">Cancelar</buttoN>
+        <button type="submit">Guardar Configuración</button>
+        <button type="button" class="delete-field" onclick="limpiarFormulario()">Cancelar</button>
     </form>
 </div>
 

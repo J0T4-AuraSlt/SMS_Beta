@@ -1,7 +1,8 @@
-/* Barra superior*/
+/* Barra superior */
 .info-bar {
-    background: linear-gradient(0deg, #74A8ED, #d0f0fd);
-    padding: 10px 20px;
+    /*background: linear-gradient(1deg, #74A8ED, #d0f0fd);*/
+    background-color: #82B3EF;
+    padding: 10px 15px;
     display: flex;
     justify-content: space-evenly;
     align-items: center;
@@ -13,24 +14,21 @@
     font-family: 'Roboto', sans-serif;
     font-weight: bolder;
     color: #415FFF;
-    height: 25px;
+    height: 50px;
+    /* Ajustado el tamaño */
 }
 
 /* Contenedor del botón "Cerrar sesión" */
 .cerrar-sesion {
     margin-left: unset;
-    /* Mueve el enlace a la derecha */
     display: fixed;
-    /* Usar flexbox */
     justify-content: center;
-    /* Centra el enlace */
     align-items: center;
     margin-left: 8px;
-    /* Ajusta este valor para mover el botón más a la izquierda */
 }
 
 .cerrar-sesion a {
-    background-color: #d0f0fd;
+    background-color: #82B3EF;
     color: #415FFF;
     padding: 8px 12px;
     border-radius: 15px;
@@ -40,18 +38,14 @@
 
 .cerrar-sesion a:hover {
     background-color: #1abc9c;
-    /* Color del enlace al pasar el ratón */
 }
 
-
+/* General */
 body {
     margin: 0;
     padding: 0;
     font-family: 'Roboto', sans-serif;
     background-color: #ecf0f1;
-    margin-left: 0%;
-    top: 0%;
-
 }
 
 /* Logo */
@@ -63,11 +57,12 @@ body {
 
 /* Menú lateral */
 .navbar {
-    background-color: #74A8ED;
+    background-color: #82B3EF;
     padding: 15px;
     width: 250px;
     position: fixed;
-    top: 45px;
+    top: 50px;
+    /* Ajustado para que no se superponga a la barra superior */
     bottom: 0;
     left: 0;
     z-index: 98;
@@ -76,7 +71,6 @@ body {
     font-size: 1rem;
     color: #415FFF;
     overflow-y: auto;
-    border-top-right-radius: 1px;
 }
 
 .navbar ul {
@@ -90,7 +84,6 @@ body {
 }
 
 .navbar ul li a {
-    /*color: #415FFF;*/
     color: white;
     text-decoration: none;
     padding: 10px;
@@ -119,51 +112,111 @@ body {
 .navbar ul li ul.submenu li a {
     padding: 8px;
     color: #bdc3c7;
-
     border-radius: 10px;
     font-weight: lighter;
-
 }
 
 .navbar ul li ul.submenu li a:hover {
     background-color: #1abc9c;
     color: white;
     border-radius: 10px;
-
 }
 
 /* Contenido */
 .content {
-    margin-left: 250px;
-    margin-top: 80px;
-    /* Ajusta para evitar que se sobreponga a la barra superior */
+    margin-left: 300px;
+    margin-top: 50px;
+    /* Ajustado para evitar que se superponga a la barra superior */
     padding: 30px;
     background-color: #ecf0f1;
     border-radius: 15px;
-    max-width: 1100px;
-    margin-right: auto;
-    margin-left: auto;
     min-height: calc(100vh - 100px);
     /* Asegura que el contenido llene la pantalla */
-    /*Eliminado: box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);*/
+}
+
+
+.container2 {
+    margin-left: 0px;
+    margin-top: 0px;
+    background-color: #ecf0f1;
+    padding: 10px;
+    border-radius: 15px;
+    min-height: calc(100vh - 100px);
+
 }
 
 h1 {
-    text-align: center;
+
+    text-align: left;
+    font-size: 1.2rem;
+    color: #5d5d5d;
+}
+
+h2 {
+    text-align: left;
     font-size: 1.5rem;
     color: #5d5d5d;
-    position: fixed;
-    top: 5%;
-    margin-left: 0%;
+}
 
+label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+    color: #5d5d5d;
+}
+
+buttoN {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+input[type="text"],
+input[type="date"],
+select {
+
+    padding: 10px 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.dynamic-fields {
+    margin-top: 10px;
+}
+
+.field {
+    margin-bottom: 5px;
+}
+
+.field-group {
+    display: flex;
+    justify-content: space-between
+}
+
+.field-group>div {
+    width: 5px;
+    padding: 10px 20px;
+    position: relative;
+}
+
+.add-field {
+    background-color: #2196F3;
+}
+
+.delete-field {
+    background-color: #f44336;
 }
 
 /* Pie de página */
 footer {
     background: #ffffff;
-    /*linear-gradient(90deg, #74A8ED, #d0f0fd);*/
     text-align: center;
-    /*  background-color: #d0f0fd;*/
     color: #000000;
     font-weight: lighter;
     position: fixed;
