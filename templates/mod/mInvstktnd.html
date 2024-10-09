@@ -1,36 +1,103 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario, Stock por tienda </title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
+    <title>Configuración de Stock Mínimo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
 </head>
-
 <body>
-    <div class="info-bar">
-        <img src="{{ url_for('static', filename='imagen/logo-clt.png') }}" alt="Logo de la Empresa" class="logotwo">
-        <span>Cliente: {{ ID_CLIENTE }}</span>
-        <span>Usuario: {{ id_usuario.upper() }}</span>
-        <span>Fecha y Hora: {{ fecha_hora }}</span>
-        <a href="{{ url_for('menu') }}">Volver al Menú</a>
-        <a href="{{ url_for('index') }}">Cerrar sesión</a>
-    </div>
 
-    <nav class="navbar">
-        <ul>
-        </ul>
-    </nav>
+<div class="container2">
+    <h1>Configuración de Stock Mínimo</h1>
+    <br>
 
-    <div class="content">
-        <h1>Inventario, Stock por tienda</h1>
-    </div>
+    <form id="stockForm">
+        <!-- Cargar Archivo -->
+        <label for="archivo">Importar archivo Excel con datos de stock:</label>
+        <input type="file" id="archivo" name="archivo" accept=".xls,.xlsx" required>
+
+        <!-- Botones -->
+        <button type="button" class="btn-import" onclick="importarArchivo()">Importar</button>
+        <button type="button" class="btn-clear" onclick="limpiarFormulario()">Limpiar</button>
+    </form>
+
+    <!-- Mensaje de resultado -->
+    <p id="mensaje" class="message"></p>
+
+    <!-- Tabla de Resultados -->
+    <table id="resultadosTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>Código de Producto</th>
+                <th>Tienda</th>
+                <th>Stock Mínimo</th>
+            </tr>
+        </thead>
+        <tbody id="resultadosBody">
+            <!-- Filas de productos se generarán dinámicamente aquí -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Función para simular la importación del archivo
+    function importarArchivo() {
+        const archivo = document.getElementById('archivo').files[0];
+        const mensaje = document.getElementById('mensaje');
+
+        if (!archivo) {
+            mensaje.textContent = "Por favor, seleccione un archivo para importar.";
+            mensaje.className = "message error";
+            return;
+        }
+
+        // Aquí, puedes agregar la lógica para procesar el archivo en formato Excel
+        // Para este ejemplo, simularemos la importación de datos.
+
+        // Simulación de datos obtenidos del archivo Excel
+        const productos = [
+            { codigo: 'P001', tienda: 'Tienda 1', stockMinimo: 10 },
+            { codigo: 'P002', tienda: 'Tienda 1', stockMinimo: 5 },
+            { codigo: 'P003', tienda: 'Tienda 2', stockMinimo: 7 },
+            { codigo: 'P004', tienda: 'Tienda 3', stockMinimo: 12 }
+        ];
+
+        // Limpiar el contenido de la tabla
+        const resultadosBody = document.getElementById('resultadosBody');
+        resultadosBody.innerHTML = "";
+
+        // Llenar la tabla con los productos importados
+        productos.forEach(producto => {
+            const fila = `<tr>
+                <td>${producto.codigo}</td>
+                <td>${producto.tienda}</td>
+                <td>${producto.stockMinimo}</td>
+            </tr>`;
+            resultadosBody.insertAdjacentHTML('beforeend', fila);
+        });
+
+        // Mostrar la tabla de resultados
+        document.getElementById('resultadosTable').style.display = "table";
+
+        // Mostrar mensaje de éxito
+        mensaje.textContent = "Archivo importado correctamente.";
+        mensaje.className = "message";
+    }
+
+    // Función para limpiar el formulario y los resultados
+    function limpiarFormulario() {
+        // Limpiar el campo de archivo
+        document.getElementById('archivo').value = "";
+
+        // Ocultar la tabla de resultados
+        document.getElementById('resultadosTable').style.display = "none";
+
+        // Limpiar el mensaje
+        const mensaje = document.getElementById('mensaje');
+        mensaje.textContent = "";
+    }
+</script>
 
 </body>
-
-<footer>
-    <p>© 2024 Todos los derechos reservados.</p>
-</footer>
-
 </html>

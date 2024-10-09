@@ -1,36 +1,138 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion de Ventas, Ventas diarias </title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
+    <title>Registro de Venta - Sistema de Gestión</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
 </head>
-
 <body>
-    <div class="info-bar">
-        <img src="{{ url_for('static', filename='imagen/logo-clt.png') }}" alt="Logo de la Empresa" class="logotwo">
-        <span>Cliente: {{ ID_CLIENTE }}</span>
-        <span>Usuario: {{ id_usuario.upper() }}</span>
-        <span>Fecha y Hora: {{ fecha_hora }}</span>
-        <a href="{{ url_for('menu') }}">Volver al Menú</a>
-        <a href="{{ url_for('index') }}">Cerrar sesión</a>
-    </div>
 
-    <nav class="navbar">
-        <ul>
-        </ul>
-    </nav>
+<div class="container">
+    <h1>Registro de Venta Diaria</h1>
 
-    <div class="content">
-        <h1>Gestion de Ventas, Ventas diarias</h1>
-    </div>
+    <form id="ventaForm">
+        <!-- Fila 1: Número de Boleta y Código de Producto -->
+        <div class="form-row">
+            <label for="nroBoleta">Número de Boleta:</label>
+            <input type="text" id="nroBoleta" name="nroBoleta" maxlength="15" required placeholder="Máx. 15 dígitos" onblur="validarBoleta()">
+            <span class="error" id="errorBoleta"></span>
+        </div>
+        <div class="form-row">
+            <label for="codigoProducto">Código de Producto:</label>
+            <input type="text" id="codigoProducto" name="codigoProducto" maxlength="10" required placeholder="Máx. 10 caracteres" onblur="validarCodigoProducto()">
+            <span class="error" id="errorCodigo"></span>
+        </div>
+
+        <!-- Fila 2: Cantidad, Precio y Total -->
+        <div class="form-row">
+            <label for="cantidad">Cantidad:</label>
+            <input type="number" id="cantidad" name="cantidad" maxlength="2" required min="1" placeholder="Máx. 2 dígitos" onblur="validarCantidad()">
+            <span class="error" id="errorCantidad"></span>
+        </div>
+        <div class="form-row">
+            <label for="precio">Precio (en pesos):</label>
+            <input type="number" id="precio" name="precio" maxlength="9" required placeholder="Máx. 9 dígitos" onblur="validarPrecio()">
+            <span class="error" id="errorPrecio"></span>
+        </div>
+        <div class="form-row">
+            <label for="total">Total:</label>
+            <input type="text" id="total" name="total" maxlength="9" readonly placeholder="Total calculado" />
+        </div>
+
+        <!-- Botones -->
+        <button type="button" onclick="registrarVenta()">Registrar Venta</button>
+        <button type="button" class="btn-reset" onclick="limpiarCampos()">Limpiar Campos</button>
+    </form>
+
+    <p id="mensajeExito" class="success" style="display:none;"></p>
+</div>
+
+<script>
+    // Validar campo Número de Boleta
+    function validarBoleta() {
+        const nroBoleta = document.getElementById('nroBoleta').value;
+        const errorBoleta = document.getElementById('errorBoleta');
+
+        if (nroBoleta.length !== 15 || !/^\d+$/.test(nroBoleta)) {
+            errorBoleta.textContent = "El número de boleta debe tener exactamente 15 dígitos.";
+            return false;
+        } else {
+            errorBoleta.textContent = "";
+            return true;
+        }
+    }
+
+    // Validar campo Código de Producto
+    function validarCodigoProducto() {
+        const codigoProducto = document.getElementById('codigoProducto').value;
+        const errorCodigo = document.getElementById('errorCodigo');
+
+        if (codigoProducto.length !== 10 || !/^[A-Za-z0-9]+$/.test(codigoProducto)) {
+            errorCodigo.textContent = "El código de producto debe tener exactamente 10 caracteres alfanuméricos.";
+            return false;
+        } else {
+            errorCodigo.textContent = "";
+            return true;
+        }
+    }
+
+    // Validar campo Cantidad
+    function validarCantidad() {
+        const cantidad = document.getElementById('cantidad').value;
+        const errorCantidad = document.getElementById('errorCantidad');
+
+        if (cantidad.length > 2 || cantidad < 1) {
+            errorCantidad.textContent = "La cantidad debe ser un número entre 1 y 99.";
+            return false;
+        } else {
+            errorCantidad.textContent = "";
+            return true;
+        }
+    }
+
+    // Validar campo Precio
+    function validarPrecio() {
+        const precio = document.getElementById('precio').value;
+        const errorPrecio = document.getElementById('errorPrecio');
+
+        if (precio.length > 9 || precio <= 0) {
+            errorPrecio.textContent = "El precio debe ser un número válido con máximo 9 dígitos.";
+            return false;
+        } else {
+            errorPrecio.textContent = "";
+            return true;
+        }
+    }
+
+    // Función para registrar la venta
+    function registrarVenta() {
+        const esValidoBoleta = validarBoleta();
+        const esValidoCodigo = validarCodigoProducto();
+        const esValidoCantidad = validarCantidad();
+        const esValidoPrecio = validarPrecio();
+
+        if (esValidoBoleta && esValidoCodigo && esValidoCantidad && esValidoPrecio) {
+            const cantidad = parseInt(document.getElementById('cantidad').value);
+            const precio = parseInt(document.getElementById('precio').value);
+            const total = cantidad * precio;
+
+            document.getElementById('total').value = total;
+            document.getElementById('mensajeExito').style.display = "block";
+            document.getElementById('mensajeExito').textContent = "Venta registrada exitosamente.";
+        }
+    }
+
+    // Función para limpiar los campos
+    function limpiarCampos() {
+        document.getElementById('ventaForm').reset();
+        document.getElementById('errorBoleta').textContent = "";
+        document.getElementById('errorCodigo').textContent = "";
+        document.getElementById('errorCantidad').textContent = "";
+        document.getElementById('errorPrecio').textContent = "";
+        document.getElementById('mensajeExito').style.display = "none";
+    }
+</script>
 
 </body>
-
-<footer>
-    <p>© 2024 Todos los derechos reservados.</p>
-</footer>
-
 </html>

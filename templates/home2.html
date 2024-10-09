@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Página con Sidebar</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>Menú</h2>
+            <ul class="menu">
+                <li><a href="#">Inicio</a></li>
+                <li><a href="#">Administración</a>
+                    <ul class="submenu">
+                        <li><a href="#">Usuarios</a></li>
+                        <li><a href="#">Roles</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">Gestión de Maestros</a>
+                    <ul class="submenu">
+                        <li><a href="#">Productos</a></li>
+                        <li><a href="#">Clientes</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">Reportes</a></li>
+                <li><a href="#">Cerrar Sesión</a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h1>Bienvenido a la Página Principal</h1>
+            <p>Este es el contenido principal de la página de inicio.</p>
+        </div>
+    </div>
+
+    <script>
+        const toggleSidebar = () => {
+            document.querySelector('.sidebar').classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

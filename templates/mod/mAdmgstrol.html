@@ -3,27 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administracion, Gestión de Roles y Permisos</title>
+    <title>Administración, Gestión de Roles y Permisos</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_mod.css') }}">
 </head>
 <body>
 
 <div class="container2">
     <h1>Gestión de Roles y Permisos</h1>
-<br>
 
-</br>
+    <!-- Mensajes de Flash para Errores o Éxitos -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-message flash-{{ category }}">
+              {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
     <form id="configForm">
-
         <!-- Nombre del Archivo -->
         <label for="archivo">Nombre del Archivo:</label>
-        <input type="text" id="archivo" name="archivo" placeholder="Ingrese el nombre del archivo">
+        <input type="text" id="archivo" name="archivo" placeholder="Ingrese el nombre del archivo" required aria-label="Nombre del Archivo">
 
         <!-- Formato -->
         <label for="formato">Formato del Archivo:</label>
-        <select id="formato" name="formato">
+        <select id="formato" name="formato" required aria-label="Formato del Archivo">
+            <option value="" disabled selected>Seleccione el formato</option>
             <option value="excel">Excel</option>
             <option value="csv">CSV</option>
             <option value="txt">TXT</option>
@@ -31,25 +39,27 @@
 
         <!-- Separación de caracteres -->
         <label for="separacion">Separación de Caracteres:</label>
-        <input type="text" id="separacion" name="separacion" placeholder="Ingrese el separador de caracteres">
+        <input type="text" id="separacion" name="separacion" placeholder="Ingrese el separador de caracteres" required aria-label="Separación de Caracteres">
 
         <!-- Campos que se deben leer -->
         <div class="dynamic-fields" id="dynamicFields">
             <label>Campos que se deben leer desde el archivo:</label>
             <div class="field">
-                <div class="field">
+                <div class="field-group">
                     <div>
-                        <input type="text" placeholder="Nombre del campo" name="campo[]">
+                        <input type="text" placeholder="Nombre del campo" name="campo[]" required aria-label="Nombre del Campo">
                     </div>
                     <div>
-                        <select name="tipoDato[]">
+                        <select name="tipoDato[]" required aria-label="Tipo de Dato">
+                            <option value="" disabled selected>Tipo de Dato</option>
                             <option value="text">Texto</option>
                             <option value="integer">Entero</option>
                             <option value="decimal">Decimal</option>
                         </select>
                     </div>
                     <div>
-                        <select name="obligatorio[]">
+                        <select name="obligatorio[]" required aria-label="Obligatorio">
+                            <option value="" disabled selected>Obligatorio</option>
                             <option value="si">Sí</option>
                             <option value="no">No</option>
                         </select>
@@ -58,19 +68,19 @@
             </div>
         </div>
 
-        <buttoN type="buttoN" class="add-field" onclick="agregarCampo()">Agregar Campo</buttoN>
+        <button type="button" class="add-field" onclick="agregarCampo()">Agregar Campo</button>
 
         <!-- Frecuencia de Ejecución -->
         <label for="frecuencia">Frecuencia de Ejecución:</label>
-        <input type="text" id="frecuencia" name="frecuencia" placeholder="Ingrese la frecuencia de ejecución">
+        <input type="text" id="frecuencia" name="frecuencia" placeholder="Ingrese la frecuencia de ejecución" required aria-label="Frecuencia de Ejecución">
 
         <!-- Fecha de Próxima Ejecución -->
         <label for="fecha">Fecha de Próxima Ejecución:</label>
-        <input type="date" id="fecha" name="fecha">
+        <input type="date" id="fecha" name="fecha" required aria-label="Fecha de Próxima Ejecución">
 
         <!-- Botones de Guardar y Cancelar -->
-        <buttoN type="submit">Guardar Configuración</buttoN>
-        <buttoN type="buttoN" class="delete-field" onclick="limpiarFormulario()">Cancelar</buttoN>
+        <button type="submit">Guardar Configuración</button>
+        <button type="button" class="delete-field" onclick="window.location.href='{{ url_for('menu') }}'">Cancelar</button>
     </form>
 </div>
 
@@ -81,17 +91,19 @@
             <div class="field">
                 <div class="field-group">
                     <div>
-                        <input type="text" placeholder="Nombre del campo" name="campo[]">
+                        <input type="text" placeholder="Nombre del campo" name="campo[]" required aria-label="Nombre del Campo">
                     </div>
                     <div>
-                        <select name="tipoDato[]">
+                        <select name="tipoDato[]" required aria-label="Tipo de Dato">
+                            <option value="" disabled selected>Tipo de Dato</option>
                             <option value="text">Texto</option>
                             <option value="integer">Entero</option>
                             <option value="decimal">Decimal</option>
                         </select>
                     </div>
                     <div>
-                        <select name="obligatorio[]">
+                        <select name="obligatorio[]" required aria-label="Obligatorio">
+                            <option value="" disabled selected>Obligatorio</option>
                             <option value="si">Sí</option>
                             <option value="no">No</option>
                         </select>

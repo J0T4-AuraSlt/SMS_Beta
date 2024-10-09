@@ -45,8 +45,8 @@
                     const url = this.getAttribute('href');
 
                     if (url && url !== '#') {
-                        cargarModulo(url); // Cargar el módulo usando la URL correcta
-                        saveCurrentModule(url); // Guardar el módulo actual
+                        cargarModulo(`/load_module${url}`);
+                        saveCurrentModule(`/load_module${url}`); // Guardar el módulo actual
                     }
                 });
             });
@@ -80,7 +80,7 @@
                                 <ul class="submenu">
                                     {% for child in item['hijos'] %}
                                         <li>
-                                            <a href="{{ url_for('load_module', module_name=child['path']) }}">{{ child['descripcion'] }}</a>
+                                            <a href="{{ url_for(child['path']) }}">{{ child['descripcion'] }}</a>
                                         </li>
                                     {% endfor %}
                                 </ul>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingreso de Promociones</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>Ingreso de Promociones</h1>
+
+    <form id="promocionForm">
+        <!-- Código del Producto -->
+        <label for="codigoProducto">Código del Producto:</label>
+        <input type="text" id="codigoProducto" name="codigoProducto" placeholder="Ingrese el código del producto" onblur="validarProducto()">
+        
+        <!-- Descripción del Producto -->
+        <label for="descripcionProducto">Descripción del Producto:</label>
+        <input type="text" id="descripcionProducto" name="descripcionProducto" readonly placeholder="Descripción del producto">
+
+        <!-- Selección de Tienda o Zona -->
+        <label for="tienda">Tienda:</label>
+        <select id="tienda" name="tienda" onchange="bloquearZona()">
+            <option value="">Seleccione una tienda</option>
+            <option value="tienda1">Tienda 1</option>
+            <option value="tienda2">Tienda 2</option>
+            <option value="tienda3">Tienda 3</option>
+        </select>
+
+        <label for="zona">Zona:</label>
+        <select id="zona" name="zona" onchange="bloquearTienda()">
+            <option value="">Seleccione una zona</option>
+            <option value="zona1">Zona 1</option>
+            <option value="zona2">Zona 2</option>
+            <option value="zona3">Zona 3</option>
+        </select>
+
+        <!-- Precio de Promoción -->
+        <label for="precioPromocion">Precio de Promoción:</label>
+        <input type="number" id="precioPromocion" name="precioPromocion" placeholder="Ingrese el precio de promoción" min="0" step="0.01">
+
+        <!-- Fecha de Fin de Promoción -->
+        <label for="fechaFin">Fecha de Fin de Promoción:</label>
+        <input type="date" id="fechaFin" name="fechaFin">
+
+        <!-- Botones de Guardar y Cancelar -->
+        <button type="submit">Guardar Promoción</button>
+        <button type="button" onclick="limpiarFormulario()">Cancelar</button>
+    </form>
+</div>
+
+<script>
+    function validarProducto() {
+        // Simulación de la validación del código de producto y mostrar descripción
+        var codigoProducto = document.getElementById('codigoProducto').value;
+        var descripcionProducto = document.getElementById('descripcionProducto');
+
+        if (codigoProducto === '12345') {
+            descripcionProducto.value = 'Producto Ejemplo'; // Simulación de validación exitosa
+        } else {
+            descripcionProducto.value = 'Producto no encontrado';
+        }
+    }
+
+    function bloquearZona() {
+        var tienda = document.getElementById('tienda').value;
+        var zona = document.getElementById('zona');
+        
+        if (tienda) {
+            zona.disabled = true; // Bloquear campo "zona" si se selecciona una tienda
+        } else {
+            zona.disabled = false; // Desbloquear campo "zona" si no hay tienda seleccionada
+        }
+    }
+
+    function bloquearTienda() {
+        var zona = document.getElementById('zona').value;
+        var tienda = document.getElementById('tienda');
+        
+        if (zona) {
+            tienda.disabled = true; // Bloquear campo "tienda" si se selecciona una zona
+        } else {
+            tienda.disabled = false; // Desbloquear campo "tienda" si no hay zona seleccionada
+        }
+    }
+
+    function limpiarFormulario() {
+        document.getElementById("promocionForm").reset();
+        document.getElementById('zona').disabled = false;
+        document.getElementById('tienda').disabled = false;
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evolución de Metas por Tienda</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}"> <!-- Vinculación al archivo CSS -->
+</head>
+<body>
+
+    <div class="form-container">
+        <h1>Evolución de Metas por Tienda</h1>
+        <form id="evolucionForm">
+            <label for="tienda">Selecciona una tienda:</label>
+            <select id="tienda" name="tienda" required>
+                <option value="">--Seleccionar tienda--</option>
+                <option value="tienda1">Tienda 1</option>
+                <option value="tienda2">Tienda 2</option>
+                <option value="tienda3">Tienda 3</option>
+                <option value="tienda4">Tienda 4</option>
+                <option value="tienda5">Tienda 5</option>
+                <option value="tienda6">Tienda 6</option>
+                <option value="tienda7">Tienda 7</option>
+                <option value="tienda8">Tienda 8</option>
+                <option value="tienda9">Tienda 9</option>
+                <option value="tienda10">Tienda 10</option>
+                <option value="tienda11">Tienda 11</option>
+                <option value="tienda12">Tienda 12</option>
+                <option value="tienda13">Tienda 13</option>
+                <option value="tienda14">Tienda 14</option>
+                <option value="tienda15">Tienda 15</option>
+                <option value="tienda16">Tienda 16</option>
+                <option value="tienda17">Tienda 17</option>
+                <option value="tienda18">Tienda 18</option>
+                <option value="tienda19">Tienda 19</option>
+                <option value="tienda20">Tienda 20</option>
+                <option value="todas">Todas las tiendas</option>
+            </select>
+            <button type="button" id="verEvolucion">Ver Evolución</button>
+        </form>
+
+        <div class="result-container" id="resultContainer" style="display:none;">
+            <h2>Resultados</h2>
+            <div class="result">
+                <div>
+                    <strong>Monto en Ventas</strong><br>
+                    <span id="montoVentas">$0.00</span>
+                </div>
+                <div>
+                    <strong>Meta Programada</strong><br>
+                    <span id="metaProgramada">$0.00</span>
+                </div>
+                <div>
+                    <strong>Porcentaje de Cumplimiento</strong><br>
+                    <span id="porcentajeCumplimiento">0%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('verEvolucion').addEventListener('click', function() {
+            const tiendaSeleccionada = document.getElementById('tienda').value;
+            const resultContainer = document.getElementById('resultContainer');
+            
+            // Lógica de cálculo ficticia
+            let montoVentas = 0, metaProgramada = 0;
+
+            if (tiendaSeleccionada !== '') {
+                // Ejemplo de valores, en un caso real esto vendría de una base de datos
+                montoVentas = 10000; // Valor simulado
+                metaProgramada = 12000; // Valor simulado
+            }
+
+            const porcentajeCumplimiento = ((montoVentas / metaProgramada) * 100).toFixed(2);
+
+            document.getElementById('montoVentas').innerText = `$${montoVentas.toFixed(2)}`;
+            document.getElementById('metaProgramada').innerText = `$${metaProgramada.toFixed(2)}`;
+            document.getElementById('porcentajeCumplimiento').innerText = `${porcentajeCumplimiento}%`;
+
+            resultContainer.style.display = 'block'; // Muestra el contenedor de resultados
+        });
+    </script>
+
+</body>
+</html>

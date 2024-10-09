@@ -1,36 +1,119 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reportes, Top 10 productos por tienda </title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
+    <title>Reporte Top 10 de Ventas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
 </head>
+<body style="background-color: #E0F7FA;">
 
-<body>
-    <div class="info-bar">
-        <img src="{{ url_for('static', filename='imagen/logo-clt.png') }}" alt="Logo de la Empresa" class="logotwo">
-        <span>Cliente: {{ ID_CLIENTE }}</span>
-        <span>Usuario: {{ id_usuario.upper() }}</span>
-        <span>Fecha y Hora: {{ fecha_hora }}</span>
-        <a href="{{ url_for('menu') }}">Volver al Menú</a>
-        <a href="{{ url_for('index') }}">Cerrar sesión</a>
-    </div>
+<div class="container" style="max-width: 800px; margin: auto; padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+    <h1 style="text-align: center;">Reporte Top 10 de Ventas</h1>
 
-    <nav class="navbar">
-        <ul>
-        </ul>
-    </nav>
+    <form id="reporteForm" style="display: flex; flex-direction: column; gap: 15px;">
+        <!-- Fecha de Inicio -->
+        <label for="fechaInicio">Fecha Inicio:</label>
+        <input type="date" id="fechaInicio" name="fechaInicio" required style="padding: 10px; border-radius: 4px; border: 1px solid #ccc;">
 
-    <div class="content">
-        <h1>Reportes, Top 10 productos por tienda</h1>
-    </div>
+        <!-- Fecha de Fin -->
+        <label for="fechaFin">Fecha Fin:</label>
+        <input type="date" id="fechaFin" name="fechaFin" required style="padding: 10px; border-radius: 4px; border: 1px solid #ccc;">
+
+        <!-- Selección de Tienda -->
+        <label for="tienda">Tienda:</label>
+        <select id="tienda" name="tienda" style="padding: 10px; border-radius: 4px; border: 1px solid #ccc;">
+            <option value="todas">Todas las tiendas</option>
+            <option value="tienda1">Tienda 1</option>
+            <option value="tienda2">Tienda 2</option>
+            <option value="tienda3">Tienda 3</option>
+        </select>
+
+        <!-- Botones Buscar y Limpiar -->
+        <div style="display: flex; justify-content: space-between;">
+            <button type="button" onclick="buscarVentas()" style="padding: 10px 15px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer;">Buscar</button>
+            <button type="button" class="btn-clear" onclick="limpiarFormulario()" style="padding: 10px 15px; background-color: #DC3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Limpiar</button>
+        </div>
+    </form>
+
+    <!-- Tabla de Resultados -->
+    <table id="resultadosTable" style="display:none; width: 100%; margin-top: 20px; border-collapse: collapse; border: 1px solid #ddd;">
+        <thead>
+            <tr>
+                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">Código de Producto</th>
+                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">Descripción del Producto</th>
+                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">Cantidad</th>
+                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">Monto Vendido</th>
+                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">Producto en Promoción</th>
+            </tr>
+        </thead>
+        <tbody id="resultadosBody">
+            <!-- Filas de productos se generarán dinámicamente aquí -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Función que simula la búsqueda de los 10 productos más vendidos
+    function buscarVentas() {
+        // Obtener valores del formulario
+        const fechaInicio = document.getElementById('fechaInicio').value;
+        const fechaFin = document.getElementById('fechaFin').value;
+        const tienda = document.getElementById('tienda').value;
+
+        if (fechaInicio === "" || fechaFin === "") {
+            alert("Por favor, ingrese un rango de fechas válido.");
+            return;
+        }
+
+        // Simulación de datos de productos (en un caso real, se obtendría del servidor)
+        const productos = [
+            { codigo: 'P001', descripcion: 'Producto 1', cantidad: 150, monto: 3000, promocion: 'S' },
+            { codigo: 'P002', descripcion: 'Producto 2', cantidad: 120, monto: 2400, promocion: 'N' },
+            { codigo: 'P003', descripcion: 'Producto 3', cantidad: 110, monto: 2200, promocion: 'N' },
+            { codigo: 'P004', descripcion: 'Producto 4', cantidad: 100, monto: 2000, promocion: 'S' },
+            { codigo: 'P005', descripcion: 'Producto 5', cantidad: 90, monto: 1800, promocion: 'N' },
+            { codigo: 'P006', descripcion: 'Producto 6', cantidad: 85, monto: 1700, promocion: 'S' },
+            { codigo: 'P007', descripcion: 'Producto 7', cantidad: 80, monto: 1600, promocion: 'N' },
+            { codigo: 'P008', descripcion: 'Producto 8', cantidad: 75, monto: 1500, promocion: 'S' },
+            { codigo: 'P009', descripcion: 'Producto 9', cantidad: 70, monto: 1400, promocion: 'N' },
+            { codigo: 'P010', descripcion: 'Producto 10', cantidad: 65, monto: 1300, promocion: 'S' }
+        ];
+
+        // Limpiar la tabla antes de mostrar resultados
+        const resultadosBody = document.getElementById('resultadosBody');
+        resultadosBody.innerHTML = "";
+
+        // Llenar la tabla con los productos simulados
+        productos.forEach(producto => {
+            const fila = `<tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">${producto.codigo}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${producto.descripcion}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${producto.cantidad}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">$${producto.monto}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${producto.promocion}</td>
+            </tr>`;
+            resultadosBody.insertAdjacentHTML('beforeend', fila);
+        });
+
+        // Mostrar la tabla
+        document.getElementById('resultadosTable').style.display = "table";
+    }
+
+    // Función para limpiar el formulario y los resultados
+    function limpiarFormulario() {
+        // Limpiar los campos de fecha y tienda
+        document.getElementById('fechaInicio').value = "";
+        document.getElementById('fechaFin').value = "";
+        document.getElementById('tienda').value = "todas";
+
+        // Ocultar la tabla de resultados
+        document.getElementById('resultadosTable').style.display = "none";
+
+        // Limpiar el contenido de la tabla
+        document.getElementById('resultadosBody').innerHTML = "";
+    }
+</script>
 
 </body>
-
-<footer>
-    <p>© 2024 Todos los derechos reservados.</p>
-</footer>
-
 </html>

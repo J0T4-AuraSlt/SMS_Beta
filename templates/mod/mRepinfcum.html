@@ -1,36 +1,120 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reportes, Informes de Cumplimiento </title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
+    <title>Gestión de Metas por Tienda</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
 </head>
-
 <body>
-    <div class="info-bar">
-        <img src="{{ url_for('static', filename='imagen/logo-clt.png') }}" alt="Logo de la Empresa" class="logotwo">
-        <span>Cliente: {{ ID_CLIENTE }}</span>
-        <span>Usuario: {{ id_usuario.upper() }}</span>
-        <span>Fecha y Hora: {{ fecha_hora }}</span>
-        <a href="{{ url_for('menu') }}">Volver al Menú</a>
-        <a href="{{ url_for('index') }}">Cerrar sesión</a>
+
+    <div class="header">
+        <h1>Gestión de Metas por Tienda</h1>
+        <!-- Aquí puedes agregar el menú si es necesario -->
     </div>
 
-    <nav class="navbar">
-        <ul>
-        </ul>
-    </nav>
+    <div class="form-container">
+        <form id="metasForm">
+            <label for="mes">Selecciona el mes:</label>
+            <select id="mes" name="mes" required>
+                <option value="">--Seleccione un mes--</option>
+                <option value="enero">Enero</option>
+                <option value="febrero">Febrero</option>
+                <option value="marzo">Marzo</option>
+                <option value="abril">Abril</option>
+                <option value="mayo">Mayo</option>
+                <option value="junio">Junio</option>
+                <option value="julio">Julio</option>
+                <option value="agosto">Agosto</option>
+                <option value="septiembre">Septiembre</option>
+                <option value="octubre">Octubre</option>
+                <option value="noviembre">Noviembre</option>
+                <option value="diciembre">Diciembre</option>
+            </select>
 
-    <div class="content">
-        <h1>Reportes, Informes de Cumplimiento</h1>
+            <div id="tiendasContainer">
+                <div class="tienda-row">
+                    <select required>
+                        <option value="">--Seleccionar tienda--</option>
+                        <option value="tienda1">Tienda 1</option>
+                        <option value="tienda2">Tienda 2</option>
+                        <option value="tienda3">Tienda 3</option>
+                        <option value="tienda4">Tienda 4</option>
+                        <option value="tienda5">Tienda 5</option>
+                        <option value="tienda6">Tienda 6</option>
+                        <option value="tienda7">Tienda 7</option>
+                        <option value="tienda8">Tienda 8</option>
+                        <option value="tienda9">Tienda 9</option>
+                        <option value="tienda10">Tienda 10</option>
+                        <option value="tienda11">Tienda 11</option>
+                        <option value="tienda12">Tienda 12</option>
+                        <option value="tienda13">Tienda 13</option>
+                        <option value="tienda14">Tienda 14</option>
+                        <option value="tienda15">Tienda 15</option>
+                        <option value="tienda16">Tienda 16</option>
+                        <option value="tienda17">Tienda 17</option>
+                        <option value="tienda18">Tienda 18</option>
+                        <option value="tienda19">Tienda 19</option>
+                        <option value="tienda20">Tienda 20</option>
+                    </select>
+                    <input type="number" placeholder="Monto de venta esperado" required>
+                    <button type="button" class="add-button" onclick="addTiendaRow()">+</button>
+                </div>
+            </div>
+
+            <br>
+            <button type="submit">Ingresar</button>
+            <button type="button" class="cancel" id="cancelar">Cancelar</button>
+        </form>
     </div>
+
+    <script>
+        document.getElementById('metasForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            // Aquí puedes agregar la lógica para guardar los datos
+            alert('Datos guardados con éxito.');
+        });
+
+        document.getElementById('cancelar').addEventListener('click', function() {
+            document.getElementById('metasForm').reset();
+            document.getElementById('tiendasContainer').innerHTML = '';
+            addTiendaRow(); // Reset the first row
+        });
+
+        function addTiendaRow() {
+            const container = document.getElementById('tiendasContainer');
+            const newRow = document.createElement('div');
+            newRow.classList.add('tienda-row');
+            newRow.innerHTML = `
+                <select required>
+                    <option value="">--Seleccionar tienda--</option>
+                    <option value="tienda1">Tienda 1</option>
+                    <option value="tienda2">Tienda 2</option>
+                    <option value="tienda3">Tienda 3</option>
+                    <option value="tienda4">Tienda 4</option>
+                    <option value="tienda5">Tienda 5</option>
+                    <option value="tienda6">Tienda 6</option>
+                    <option value="tienda7">Tienda 7</option>
+                    <option value="tienda8">Tienda 8</option>
+                    <option value="tienda9">Tienda 9</option>
+                    <option value="tienda10">Tienda 10</option>
+                    <option value="tienda11">Tienda 11</option>
+                    <option value="tienda12">Tienda 12</option>
+                    <option value="tienda13">Tienda 13</option>
+                    <option value="tienda14">Tienda 14</option>
+                    <option value="tienda15">Tienda 15</option>
+                    <option value="tienda16">Tienda 16</option>
+                    <option value="tienda17">Tienda 17</option>
+                    <option value="tienda18">Tienda 18</option>
+                    <option value="tienda19">Tienda 19</option>
+                    <option value="tienda20">Tienda 20</option>
+                </select>
+                <input type="number" placeholder="Monto de venta esperado" required>
+                <button type="button" class="add-button" onclick="addTiendaRow()">+</button>
+            `;
+            container.appendChild(newRow);
+        }
+    </script>
 
 </body>
-
-<footer>
-    <p>© 2024 Todos los derechos reservados.</p>
-</footer>
-
 </html>

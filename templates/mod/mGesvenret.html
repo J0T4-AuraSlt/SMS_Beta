@@ -1,36 +1,122 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion de Ventas, Ventas retail </title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
+    <title>Configuración de Ventas Semanales</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}"> <!-- Vinculación al archivo CSS -->
+
 </head>
-
 <body>
-    <div class="info-bar">
-        <img src="{{ url_for('static', filename='imagen/logo-clt.png') }}" alt="Logo de la Empresa" class="logotwo">
-        <span>Cliente: {{ ID_CLIENTE }}</span>
-        <span>Usuario: {{ id_usuario.upper() }}</span>
-        <span>Fecha y Hora: {{ fecha_hora }}</span>
-        <a href="{{ url_for('menu') }}">Volver al Menú</a>
-        <a href="{{ url_for('index') }}">Cerrar sesión</a>
-    </div>
 
-    <nav class="navbar">
-        <ul>
-        </ul>
-    </nav>
+<div class="container">
+    <h1>Configuración de Ventas Semanales</h1>
 
-    <div class="content">
-        <h1>Gestion de Ventas, Ventas retail</h1>
-    </div>
+    <form id="configForm">
+        <!-- Nombre del Archivo -->
+        <label for="archivo">Nombre del Archivo:</label>
+        <input type="text" id="archivo" name="archivo" placeholder="Ingrese el nombre del archivo" required>
+
+        <!-- Formato -->
+        <label for="formato">Formato del Archivo:</label>
+        <select id="formato" name="formato" required>
+            <option value="excel">Excel</option>
+            <option value="csv">CSV</option>
+            <option value="txt">TXT</option>
+        </select>
+
+        <!-- Separación de caracteres -->
+        <label for="separacion">Separación de Caracteres:</label>
+        <input type="text" id="separacion" name="separacion" placeholder="Ingrese el separador de caracteres" required>
+
+        <!-- Campos que se deben leer -->
+        <div class="dynamic-fields" id="dynamicFields">
+            <label>Campos que se deben leer desde el archivo:</label>
+            <div class="field">
+                <div class="field-group">
+                    <input type="text" placeholder="Nombre del campo" name="campo[]" required>
+                </div>
+                <div class="field-group">
+                    <select name="tipoDato[]" required>
+                        <option value="text">Texto</option>
+                        <option value="integer">Entero</option>
+                        <option value="decimal">Decimal</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <select name="obligatorio[]" required>
+                        <option value="si">Sí</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" class="add-field" onclick="agregarCampo()">Agregar Campo</button>
+
+        <!-- Frecuencia de Ejecución -->
+        <label for="frecuencia">Frecuencia de Ejecución:</label>
+        <input type="text" id="frecuencia" name="frecuencia" placeholder="Ingrese la frecuencia de ejecución" required>
+
+        <!-- Fecha de Próxima Ejecución -->
+        <label for="fecha">Fecha de Próxima Ejecución:</label>
+        <input type="date" id="fecha" name="fecha" required>
+
+        <!-- Botones de Guardar y Cancelar -->
+        <button type="submit">Guardar Configuración</button>
+        <button type="button" class="delete-field" onclick="limpiarFormulario()">Cancelar</button>
+    </form>
+</div>
+
+<script>
+    function agregarCampo() {
+        // Crear nuevo grupo de campos
+        const campoHTML = `
+            <div class="field">
+                <div class="field-group">
+                    <input type="text" placeholder="Nombre del campo" name="campo[]" required>
+                </div>
+                <div class="field-group">
+                    <select name="tipoDato[]" required>
+                        <option value="text">Texto</option>
+                        <option value="integer">Entero</option>
+                        <option value="decimal">Decimal</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <select name="obligatorio[]" required>
+                        <option value="si">Sí</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+            </div>`;
+        document.getElementById('dynamicFields').insertAdjacentHTML('beforeend', campoHTML);
+    }
+
+    function limpiarFormulario() {
+        document.getElementById("configForm").reset();
+        document.getElementById('dynamicFields').innerHTML = `
+            <label>Campos que se deben leer desde el archivo:</label>
+            <div class="field">
+                <div class="field-group">
+                    <input type="text" placeholder="Nombre del campo" name="campo[]" required>
+                </div>
+                <div class="field-group">
+                    <select name="tipoDato[]" required>
+                        <option value="text">Texto</option>
+                        <option value="integer">Entero</option>
+                        <option value="decimal">Decimal</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <select name="obligatorio[]" required>
+                        <option value="si">Sí</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+            </div>`;
+    }
+</script>
 
 </body>
-
-<footer>
-    <p>© 2024 Todos los derechos reservados.</p>
-</footer>
-
 </html>

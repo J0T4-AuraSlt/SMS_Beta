@@ -1,74 +1,27 @@
-import os
-import json
-import logging
-import re
-from datetime import datetime
-from flask import Flask, request, render_template, url_for, flash, session, redirect, abort
+from flask import Flask, request, render_template, url_for, flash, g, session, redirect
 from db_config import get_db_connection
-from jinja2 import TemplateNotFound
-
-# Configuración de logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+import json
+from datetime import datetime
 
 app = Flask(__name__)
-
-# Configuraciones de seguridad
-# Utiliza una variable de entorno para la clave secreta
-app.secret_key = os.environ.get('SECRET_KEY', 'clave_por_defecto_segura')
-app.config.update(
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=True,  # Asegúrate de usar HTTPS en producción
-    SESSION_COOKIE_SAMESITE='Lax'
-)
-
-# Valor por defecto, se puede ajustar según la lógica de la aplicación
-ID_CLIENTE_DEFAULT = 4
-
-
-def construir_menu(menu_json):
-    """Construye la estructura del menú a partir de la respuesta JSON."""
-    menu = []
-    for item in menu_json:
-        if item['tpo_nodo'] == 'PADRE':
-            menu.append({
-                'path': item['path'],
-                'descripcion': item['descripcion'],
-                'hijos': []
-            })
-        elif item['tpo_nodo'] == 'HIJO' and menu:
-            menu[-1]['hijos'].append({
-                'path': item['path'],
-                'descripcion': item['descripcion']
-            })
-    return menu
+app.secret_key = 'tu_clave_secreta'  # Necesaria para usar sesiones
+ID_CLIENTE = 4  # El ID del cliente será basada en la URL, relacionando URL=CLT
+FECHA_HORA = datetime.now().strftime("%Y-%m-%d %H:%M")
+# actualizacion login
 
 
 @app.context_processor
 def inject_user_data():
-    """Inyecta datos del usuario en el contexto de las plantillas."""
-    ID_CLIENTE = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
+    ID_CLIENTE = session.get('ID_CLIENTE')
     id_usuario = session.get('id_usuario')
-    fecha_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    fecha_hora = datetime.now().strftime("%Y-%m-%d %H:%M")
     return dict(ID_CLIENTE=ID_CLIENTE, id_usuario=id_usuario, fecha_hora=fecha_hora)
-
-
-@app.route('/')
-def index():
-    """Ruta principal que renderiza la página de login."""
-    return render_template('login.html')
 
 
 @app.route('/login', methods=['POST'])
 def login():
-    """Maneja el proceso de login del usuario."""
-    ID_CLIENTE = ID_CLIENTE_DEFAULT  # Puedes ajustar esta lógica para obtener el ID_CLIENTE desde la URL u otra fuente
-    id_usuario = request.form.get('id_usuario', '').strip()
-    pwd = request.form.get('pwd', '').strip()
-
-    if not id_usuario or not pwd:
-        flash("Por favor, completa ambos campos.", "error")
-        return render_template('login.html')
+    id_usuario = request.form['id_usuario']
+    pwd = request.form['pwd']
 
     # Validar las credenciales de acceso
     validacion = valida_acceso(ID_CLIENTE, id_usuario, pwd)
@@ -77,178 +30,155 @@ def login():
         # Almacenar en la sesión
         session['ID_CLIENTE'] = ID_CLIENTE
         session['id_usuario'] = id_usuario
-        logger.info("ID_CLIENTE: %s, id_usuario: %s", ID_CLIENTE, id_usuario)
+        # Verifica que se almacenen correctamente
+        print("ID_CLIENTE:", session['ID_CLIENTE'],
+              "id_usuario:", session['id_usuario'])
 
         # Obtener el menú si la validación es exitosa
         menu_json = get_menu(ID_CLIENTE, id_usuario)
 
-        if isinstance(menu_json, dict) and "message" in menu_json:
-            flash(menu_json["message"], "error")
-            return render_template('login.html')
+        # Estructurar el menú
+        menu = []
+        for item in menu_json:
+            if item['tpo_nodo'] == 'PADRE':
+                menu.append({
+                    'path': item['path'],
+                    'descripcion': item['descripcion'],
+                    'hijos': []  # Inicializa la lista de hijos
+                })
+            elif item['tpo_nodo'] == 'HIJO':
+                if menu:  # Asegúrate de que haya al menos un padre
+                    menu[-1]['hijos'].append({
+                        'path': item['path'],
+                        'descripcion': item['descripcion']
+                    })
 
-        menu = construir_menu(menu_json)
-
-        return render_template('menu.html', menu=menu, id_usuario=id_usuario, ID_CLIENTE=ID_CLIENTE)
+        try:
+            # Renderizar la plantilla 'menu.html' con el menú estructurado
+            return render_template('menu.html', menu=menu, id_usuario=id_usuario, ID_CLIENTE=ID_CLIENTE, fecha_hora=FECHA_HORA)
+        except BuildError as e:
+            # Manejar el error y mostrar un mensaje amigable
+            flash(f"Error al construir la URL: {str(e)}", "error")
+            return render_template('menu.html', menu=menu, id_usuario=id_usuario, ID_CLIENTE=ID_CLIENTE, fecha_hora=FECHA_HORA)
     else:
         error = validacion.split(
             ';')[1] if ';' in validacion else "Credenciales incorrectas"
-        flash(error, "error")
-        return render_template('login.html')
+        return render_template('login.html', error=error)
 
 
 def valida_acceso(ID_CLIENTE, id_usuario, pwd):
-    """Valida las credenciales del usuario."""
     id_usuario = id_usuario.lower()
 
-    if len(id_usuario) < 3:
-        return "ERROR;ID Usuario debe tener al menos 5 caracteres"
+    if len(id_usuario) < 5:
+        return "ID Usuario debe tener al menos 5 caracteres"
 
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT public.valida_acceso(%s, %s, %s)",
-                            (ID_CLIENTE, id_usuario, pwd))
-                result = cur.fetchone()
-        return result[0] if result else "ERROR;Credenciales incorrectas"
-    except Exception as e:
-        logger.error("Error al validar acceso: %s", e)
-        return "ERROR;Error interno. Intenta de nuevo más tarde."
+    # Conectar a la base de datos
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # Ejecutar la función de validación en la base de datos
+    cur.execute("SELECT public.valida_acceso(%s, %s, %s)",
+                (ID_CLIENTE, id_usuario, pwd))
+    result = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return result[0] if result else "Credenciales incorrectas"
+
+# Función para obtener el menú del usuario
 
 
 def get_menu(ID_CLIENTE, id_usuario):
-    """Obtiene el menú para el usuario desde la base de datos."""
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT public.get_menu(%s, %s)",
-                            (ID_CLIENTE, id_usuario))
-                result = cur.fetchone()
+    conn = get_db_connection()
+    cur = conn.cursor()
 
-        if result and result[0]:
-            if isinstance(result[0], list):
-                menu_json = result[0]
-            else:
-                try:
-                    menu_json = json.loads(result[0])
-                except json.JSONDecodeError:
-                    logger.error("Error al decodificar el menú JSON.")
-                    return {"message": "Error al decodificar el menú desde el servidor."}
+    # Ejecutar la consulta que llama a la función almacenada
+    cur.execute("SELECT public.get_menu(%s, %s)", (ID_CLIENTE, id_usuario))
 
-            if not menu_json:
-                return {"message": "El menú no tiene información disponible."}
+    result = cur.fetchone()
 
-            return menu_json
+    cur.close()
+    conn.close()
+
+    if result and result[0]:
+        if isinstance(result[0], list):
+            menu_json = result[0]
         else:
-            return {"message": "No se ha encontrado información para este usuario."}
-    except Exception as e:
-        logger.error("Error al obtener el menú: %s", e)
-        return {"message": "Error al obtener el menú. Intenta de nuevo más tarde."}
+            try:
+                menu_json = json.loads(result[0])
+            except json.JSONDecodeError:
+                return {"message": "Error al decodificar el menú desde el servidor."}
+
+        if not menu_json:
+            return {"message": "El menú no tiene información disponible."}
+
+        return menu_json
+    else:
+        return {"message": "No se ha encontrado información para este usuario."}
+
+
+@app.route('/')
+def index():
+    return render_template('login.html')
 
 
 @app.route('/menu')
 def menu():
-    """Ruta que muestra el menú al usuario autenticado."""
-    ID_CLIENTE = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
+    ID_CLIENTE = session.get('ID_CLIENTE')
     id_usuario = session.get('id_usuario')
 
     # Verificar si hay sesión válida
-    if not id_usuario:
-        logger.info("Redireccionando a dev: falta id_usuario")
+    if not ID_CLIENTE or not id_usuario:
+        print("Redireccionando a dev: falta ID_CLIENTE o id_usuario")
         return redirect(url_for('dev'))
 
     menu_json = get_menu(ID_CLIENTE, id_usuario)
 
-    if isinstance(menu_json, dict) and "message" in menu_json:
-        flash(menu_json["message"], "error")
-        return redirect(url_for('dev'))
+    menu = []
+    for item in menu_json:
+        if item['tpo_nodo'] == 'PADRE':
+            menu.append({
+                'path': item['path'],
+                'descripcion': item['descripcion'],
+                'hijos': []
+            })
+        elif item['tpo_nodo'] == 'HIJO':
+            if menu:
+                menu[-1]['hijos'].append({
+                    'path': item['path'],
+                    'descripcion': item['descripcion']
+                })
 
-    menu = construir_menu(menu_json)
-
-    valid_paths = [item['path']
-                   for item in menu_json if item['tpo_nodo'] in ['PADRE', 'HIJO']]
+    valid_paths = [item['path'] for item in menu_json if item['tpo_nodo'] == 'PADRE'] + \
+                  [item['path']
+                      for item in menu_json if item['tpo_nodo'] == 'HIJO']
 
     # Verificar que el menú no esté vacío
     if not menu:
-        logger.info("Redireccionando a dev: menú vacío")
-        flash("El menú está vacío.", "error")
+        print("Redireccionando a dev: menú vacío")
         return redirect(url_for('dev'))
 
     # Verificar que todos los paths sean válidos
     for item in menu:
         for hijo in item['hijos']:
             if hijo['path'] not in valid_paths:
-                logger.info("Redireccionando a dev: path inválido")
-                flash("Path inválido detectado.", "error")
+                print("Redireccionando a dev: path inválido")
                 return redirect(url_for('dev'))
 
-    return render_template('menu.html', menu=menu, id_usuario=id_usuario, ID_CLIENTE=ID_CLIENTE)
+    # Renderizar la plantilla del menú
+    return render_template('menu.html', menu=menu, id_usuario=id_usuario, ID_CLIENTE=ID_CLIENTE,
+                           fecha_hora=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                           valid_paths=valid_paths)
+
+# Menu
 
 
-@app.route('/mod/<module_name>')
-def load_module(module_name):
-    """Ruta dinámica para cargar módulos."""
-    # Validar el nombre del módulo para evitar accesos no deseados
-    if not re.match("^[a-zA-Z0-9_]+$", module_name):
-        abort(404)
+# @app.route('/mPadminist')
+# def mPadminist():
+#    return render_template('mPadminist.html')
 
-    try:
-        return render_template(f'mod/{module_name}.html')
-    except TemplateNotFound:
-        flash("Módulo no encontrado.", "error")
-        return redirect(url_for('menu'))
-    except Exception as e:
-        logger.error("Error al cargar el módulo %s: %s", module_name, e)
-        flash("Error al cargar el módulo.", "error")
-        return redirect(url_for('menu'))
-
-
-@app.route('/mod/mAdmcreusr', methods=['GET', 'POST'])
-def crear_usuario():
-    # Suponiendo que tienes el id_usuario disponible en la sesión o en el contexto
-    # Obtén el id del usuario que hizo login
-    id_usuario = session.get('id_usuario')
-
-    if request.method == 'POST':
-        # Obtener datos del formulario
-        id_clt = request.form.get('id_clt')
-        rut_usr = request.form.get('rut_usr')
-        dv_usr = request.form.get('dv_usr')
-        nomb_usr = request.form.get('nomb_usr')
-        ape_pat_usr = request.form.get('ape_pat_usr')
-        ape_mat_usr = request.form.get('ape_mat_usr')
-        ema_usr = request.form.get('ema_usr')
-        cel_usr = request.form.get('cel_usr')
-        id_tda = request.form.get('id_tda')
-        id_prf = request.form.get('id_prf')
-        pwd = request.form.get('pwd')
-        # Obtener el nuevo campo de nombre de usuario
-        # nombre_usuario = request.form.get('nombre_usuario')
-
-        # Llamar a la función SQL crea_usuario
-        try:
-            with get_db_connection() as conn:
-                with conn.cursor() as cur:
-                    # Asegúrate de que la cantidad y el orden de los parámetros coincidan con la definición de la función SQL
-                    cur.execute("SELECT public.crea_usuario(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,  %s);",
-                                (id_clt, rut_usr, dv_usr, nomb_usr, ape_pat_usr, ape_mat_usr,
-                                 ema_usr, cel_usr, id_tda, id_prf, pwd, id_usuario))  # Cambiado el orden
-
-                    # Recuperar la respuesta
-                    respuesta = cur.fetchone()[0]
-
-            # Manejar la respuesta de la función SQL
-            if respuesta.startswith('OK'):
-                flash(respuesta.split(';')[1], 'success')
-                return redirect(url_for('menu'))
-            else:
-                flash(respuesta.split(';')[1], 'error')
-                return redirect(url_for('crear_usuario'))
-
-        except Exception as e:
-            flash(f"Error al crear el usuario: {str(e)}", 'error')
-            return redirect(url_for('crear_usuario'))
-
-    return render_template('mod/mAdmcreusr.html')
+# modulos
 
 
 @app.route('/mod/mAdmcreusr')
@@ -624,22 +554,7 @@ def mGesaltsob():
 
 @app.route('/dev')
 def dev():
-    """Ruta para desarrollo o manejo de errores."""
     return render_template('dev.html')
-
-# Manejo de errores personalizados
-
-
-@app.errorhandler(404)
-def pagina_no_encontrada(e):
-    """Manejador para errores 404."""
-    return render_template('404.html'), 404
-
-
-@app.errorhandler(500)
-def error_interno(e):
-    """Manejador para errores 500."""
-    return render_template('500.html'), 500
 
 
 if __name__ == '__main__':
