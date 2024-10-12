@@ -3,162 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administración, Restablecimiento de Contraseñas</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
+    <title>Restablecer Contraseña</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-<div id="module-container" class="container2">
-    <h1>Restablecimiento de Contraseñas</h1>
-    <br>
+    <h1>Restablecer Contraseña de Usuario</h1>
 
-    <form id="configForm">
-        <!-- Nombre del Archivo -->
-        <label for="archivo">Nombre del Archivo:</label>
-        <input type="text" id="archivo" name="archivo" placeholder="Ingrese el nombre del archivo">
-
-        <!-- Formato -->
-        <label for="formato">Formato del Archivo:</label>
-        <select id="formato" name="formato">
-            <option value="excel">Excel</option>
-            <option value="csv">CSV</option>
-            <option value="txt">TXT</option>
+    <form id="reset-password-form">
+        <label for="user-select">Selecciona un usuario:</label>
+        <select id="user-select" name="user" required>
+            <option value="">-- Selecciona un usuario --</option>
+            <!-- Los usuarios se cargarán aquí mediante JavaScript -->
         </select>
 
-        <!-- Separación de caracteres -->
-        <label for="separacion">Separación de Caracteres:</label>
-        <input type="text" id="separacion" name="separacion" placeholder="Ingrese el separador de caracteres">
+        <label for="new-password">Nueva Contraseña:</label>
+        <input type="password" id="new-password" name="new_password" required>
 
-        <!-- Campos que se deben leer -->
-        <div class="dynamic-fields" id="dynamicFields">
-            <label>Campos que se deben leer desde el archivo:</label>
-            <div class="field">
-                <div class="field-group">
-                    <input type="text" placeholder="Nombre del campo" name="campo[]">
-                    <select name="tipoDato[]">
-                        <option value="text">Texto</option>
-                        <option value="integer">Entero</option>
-                        <option value="decimal">Decimal</option>
-                    </select>
-                    <select name="obligatorio[]">
-                        <option value="si">Sí</option>
-                        <option value="no">No</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <button type="button" class="add-field" onclick="agregarCampo()">Agregar Campo</button>
-
-        <!-- Frecuencia de Ejecución -->
-        <label for="frecuencia">Frecuencia de Ejecución:</label>
-        <input type="text" id="frecuencia" name="frecuencia" placeholder="Ingrese la frecuencia de ejecución">
-
-        <!-- Fecha de Próxima Ejecución -->
-        <label for="fecha">Fecha de Próxima Ejecución:</label>
-        <input type="date" id="fecha" name="fecha">
-
-        <!-- Botones de Guardar y Cancelar -->
-        <button type="submit" onclick="guardarFormulario()">Guardar Configuración</button>
-        <button type="button" class="delete-field" onclick="limpiarFormulario()">Cancelar</button>
+        <button type="submit">Restablecer Contraseña</button>
     </form>
-</div>
 
-<script>
-    // Función para agregar nuevo campo
-    function agregarCampo() {
-        const campoHTML = `
-            <div class="field">
-                <div class="field-group">
-                    <input type="text" placeholder="Nombre del campo" name="campo[]">
-                    <select name="tipoDato[]">
-                        <option value="text">Texto</option>
-                        <option value="integer">Entero</option>
-                        <option value="decimal">Decimal</option>
-                    </select>
-                    <select name="obligatorio[]">
-                        <option value="si">Sí</option>
-                        <option value="no">No</option>
-                    </select>
-                </div>
-            </div>`;
-        document.getElementById('dynamicFields').insertAdjacentHTML('beforeend', campoHTML);
-    }
+    <div id="message"></div>
 
-    // Función para limpiar el formulario
-    function limpiarFormulario() {
-        document.getElementById("configForm").reset();
-        sessionStorage.removeItem('formData');  // Limpiar el sessionStorage
-    }
+    <script>
+        $(document).ready(function() {
+            // Obtener el ID_CLIENTE de la sesión o establecerlo manualmente
+            const idCliente = {{ ID_CLIENTE }};
 
-    // Guardar el estado del formulario en sessionStorage
-    function guardarFormulario() {
-        const form = document.getElementById('configForm');
-        const formData = new FormData(form);
-        const object = {};
-        formData.forEach((value, key) => {
-            if (!object[key]) {
-                object[key] = value;
-            } else {
-                if (Array.isArray(object[key])) {
-                    object[key].push(value);
-                } else {
-                    object[key] = [object[key], value];
-                }
-            }
-        });
-        sessionStorage.setItem('formData', JSON.stringify(object));
-    }
+            // Cargar los usuarios en el desplegable
+            $.getJSON(`/get_users/${idCliente}`, function(users) {
+                users.forEach(function(user) {
+                    $('#user-select').append(`<option value="${user.id_usr}">${user.nom_usr} (${user.raz_social})</option>`);
+                });
+            });
 
-    // Cargar el estado del formulario desde sessionStorage
-    function cargarFormulario() {
-        const savedFormData = sessionStorage.getItem('formData');
-        if (savedFormData) {
-            const formData = JSON.parse(savedFormData);
-            for (const key in formData) {
-                const field = document.getElementsByName(key);
-                if (field.length > 0) {
-                    const value = formData[key];
-                    if (Array.isArray(value)) {
-                        for (let i = 0; i < value.length; i++) {
-                            if (field[i]) {
-                                field[i].value = value[i];
-                            } else {
-                                agregarCampo();
-                                document.getElementsByName(key)[i].value = value[i];
-                            }
-                        }
-                    } else {
-                        field[0].value = value;
+            // Manejo del envío del formulario
+            $('#reset-password-form').on('submit', function(e) {
+                e.preventDefault(); // Evitar que se envíe el formulario de forma tradicional
+
+                const userId = $('#user-select').val();
+                const newPassword = $('#new-password').val();
+
+                $.ajax({
+                    url: '/reset_user_password', // Ruta para restablecer la contraseña
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ id_usuario: userId, new_password: newPassword }),
+                    success: function(response) {
+                        $('#message').text(response.message);
+                    },
+                    error: function(jqXHR) {
+                        $('#message').text(jqXHR.responseJSON.message);
                     }
-                }
-            }
-        }
-    }
-
-    // Ejecutar al cargar la página
-    document.addEventListener('DOMContentLoaded', function() {
-        cargarFormulario();  // Cargar los datos del formulario si existen en sessionStorage
-    });
-
-    // Guardar la URL actual del módulo en sessionStorage
-    function saveCurrentModule() {
-        sessionStorage.setItem('lastModule', window.location.href); // Guardar la URL actual
-    }
-
-    // Verificar si hay un módulo almacenado en sessionStorage
-    function loadLastModule() {
-        const lastModule = sessionStorage.getItem('lastModule');
-        if (lastModule && lastModule !== window.location.href) {
-            window.location.href = lastModule; // Redirigir al último módulo visitado
-        }
-    }
-
-    // Guardar el módulo actual al navegar o interactuar
-    document.getElementById('module-container').addEventListener('click', saveCurrentModule);
-
-    // Cargar el último módulo visitado cuando se refresca la página
-    window.onload = loadLastModule;
-</script>
-
+                });
+            });
+        });
+    </script>
 </body>
 </html>

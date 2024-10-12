@@ -3,19 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión</title>
+    <title>Login</title>
+    <link rel="icon" href="{{ url_for('static', filename='imagen/favicon-vivo.png') }}" type="image/x-icon"> <!-- Agregar favicon -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style_login.css') }}">
 </head>
 <body>
     <div class="header">
-        <h1> </h1>
-        <!-- Logo, asegúrate que la ruta sea correcta y el tamaño adecuado -->
         <img src="{{ url_for('static', filename='imagen/logo-clt.png') }}" 
              alt="Logo" class="logo">
-        <br> 
     </div>
+
     <div class="form-container">
         <h1>Inicio de Sesión</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <p class="{{ category }}">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
         <form action="{{ url_for('login') }}" method="POST">
             <div class="input-group">
                 <label for="id_usuario">Usuario ID</label>
@@ -23,20 +33,46 @@
             </div>
 
             <div class="input-group">
-                <label for="pwd">Password:</label>
+                <label for="pwd">Password</label>
                 <input type="password" id="pwd" name="pwd" required>
             </div>
-            <br> 
+
             <button type="submit" class="center-button">Ingresar</button>
-            <br>
-        </br>
-            {{ edit_1 }}
-            <label class="forgot-password" onclick="location.href='restpass.html'" style="display: block; text-align: center; color: black; background-color: transparent; cursor: pointer;">Forgot Password?</label>
-            {{ edit_2 }}
         </form>
-        {% if error %}
-            <p class="error">{{ error }}</p>
-        {% endif %}
+
+        <div>
+            <a href="#" class="forgot-password" style="display: block; text-align: center; color: black; background-color: transparent; cursor: pointer; text-decoration: none;" onclick="validarIdUsuario(event)">
+                Forgot Password?
+            </a>
+        </div>
+    
     </div>
+
+    <script>
+        function validarIdUsuario(event) {
+            const idUsuario = document.getElementById('id_usuario').value;
+    
+            if (!idUsuario) {
+                event.preventDefault(); // Evita la redirección si no hay valor
+                alert("Por favor, ingresa un Usuario ID válido antes de continuar.");
+            } else {
+                // Almacena el id_usuario en sessionStorage
+                sessionStorage.setItem('id_usuario', idUsuario);
+                // Redirige a la página de restablecimiento de contraseña
+                window.location.href = "{{ url_for('restpass') }}";
+            }
+        }
+    
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', () => {
+                const flashMessages = document.querySelector('.flash-messages');
+                if (flashMessages) {
+                    flashMessages.remove();
+                }
+            });
+        });
+    </script>
+    
+    
 </body>
 </html>

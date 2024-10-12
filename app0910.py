@@ -3,28 +3,29 @@ import json
 import logging
 import re
 from datetime import datetime
-from flask import Flask, request, render_template, url_for, flash, session, redirect, abort, jsonify
+from flask import Flask, request, render_template, url_for, flash, session, redirect, abort
 from db_config import get_db_connection
 from jinja2 import TemplateNotFound
-import smtplib
-from email.mime.text import MIMEText
 
 # Configuración de logging
+# control para DEBUG, INFO, WARNING, ERROR o CRITICAL
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
 # Configuraciones de seguridad
+# Utiliza una variable de entorno para la clave secreta
 app.secret_key = os.environ.get('SECRET_KEY', 'clave_por_defecto_segura')
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=False,  # Cambiar a True en producción con HTTPS
+    SESSION_COOKIE_SECURE=True,  # Asegúrate de usar HTTPS en producción
     SESSION_COOKIE_SAMESITE='Lax'
 )
 
 # Valor por defecto, se puede ajustar según la lógica de la aplicación
 ID_CLIENTE_DEFAULT = 4
+# El cliente se define por la URL que este consultando, base a esto hereda el ID para todo lo demás
 
 
 def construir_menu(menu_json):
@@ -50,7 +51,7 @@ def inject_user_data():
     """Inyecta datos del usuario en el contexto de las plantillas."""
     ID_CLIENTE = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
     id_usuario = session.get('id_usuario')
-    fecha_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    fecha_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     return dict(ID_CLIENTE=ID_CLIENTE, id_usuario=id_usuario, fecha_hora=fecha_hora)
 
 
@@ -68,7 +69,7 @@ def login():
     pwd = request.form.get('pwd', '').strip()
 
     if not id_usuario or not pwd:
-        flash("Por favor, completa ambos campos para continuar ;).", "error")
+        flash("Por favor, completa ambos campos.", "error")
         return render_template('login.html')
 
     # Validar las credenciales de acceso
@@ -80,8 +81,16 @@ def login():
         session['id_usuario'] = id_usuario
         logger.info("ID_CLIENTE: %s, id_usuario: %s", ID_CLIENTE, id_usuario)
 
-        # Redirigir a /menu
-        return redirect(url_for('menu'))
+        # Obtener el menú si la validación es exitosa
+        menu_json = get_menu(ID_CLIENTE, id_usuario)
+
+        if isinstance(menu_json, dict) and "message" in menu_json:
+            flash(menu_json["message"], "error")
+            return render_template('login.html')
+
+        menu = construir_menu(menu_json)
+
+        return render_template('menu.html', menu=menu, id_usuario=id_usuario, ID_CLIENTE=ID_CLIENTE)
     else:
         error = validacion.split(
             ';')[1] if ';' in validacion else "Credenciales incorrectas"
@@ -94,7 +103,7 @@ def valida_acceso(ID_CLIENTE, id_usuario, pwd):
     id_usuario = id_usuario.lower()
 
     if len(id_usuario) < 3:
-        return "ERROR;ID Usuario debe tener al menos 3 caracteres"
+        return "ERROR;ID Usuario debe tener al menos 5 caracteres"
 
     try:
         with get_db_connection() as conn:
@@ -138,33 +147,11 @@ def get_menu(ID_CLIENTE, id_usuario):
         return {"message": "Error al obtener el menú. Intenta de nuevo más tarde."}
 
 
-def obtener_user_menu(ID_CLIENTE, id_usuario):
-    """Obtiene la información del usuario desde la base de datos."""
-    try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT public.get_user_menu(%s, %s)",
-                            (ID_CLIENTE, id_usuario))
-                result = cur.fetchone()
-
-        if result and result[0]:
-            user_menu_json = result[0]
-            logger.info(
-                f"Resultado de la función SQL (user_menu_json): {user_menu_json}")
-            # Asegúrate de que el JSON se convierta a un diccionario
-            return json.loads(user_menu_json) if isinstance(user_menu_json, str) else user_menu_json
-        else:
-            return None
-    except Exception as e:
-        logger.error("Error al obtener la información del usuario: %s", e)
-        return None
-
-
 @app.route('/menu')
 def menu():
     """Ruta que muestra el menú al usuario autenticado."""
     ID_CLIENTE = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
-    id_usuario = session.get('id_usuario', '').strip().lower()
+    id_usuario = session.get('id_usuario')
 
     logger.info(f"ID_CLIENTE: {ID_CLIENTE}, id_usuario: {id_usuario}")
 
@@ -187,7 +174,7 @@ def menu():
     logger.info(f"Menú construido: {menu}")
 
     # Llamar a la función para obtener la información del usuario
-    user_data = obtener_user_menu(ID_CLIENTE, id_usuario)
+    user_data = get_user_menu(ID_CLIENTE, id_usuario)
     logger.info(f"User Data obtenido: {user_data}")
 
     # Verificar si la información del usuario es válida
@@ -197,7 +184,7 @@ def menu():
         return redirect(url_for('dev'))
 
     # Obtener módulos del usuario desde la respuesta del JSON
-    load_module = [mod['desc_modulo'] for mod in user_data.get('modulos', [])]
+    load_module = [mod['desc_modulo'] for mod in user_data['modulos']]
     logger.info(f"Módulos obtenidos: {load_module}")
 
     # Renderizar la plantilla del menú con los datos obtenidos
@@ -210,38 +197,7 @@ def menu():
                            menu=menu)
 
 
-@app.route('/get_user_menu', methods=['POST'])
-def get_user_menu_route():
-    """Endpoint API para obtener la información del usuario."""
-    if request.method == 'POST':
-        try:
-            # Obtener los datos enviados en la solicitud
-            id_cliente = request.json.get('id_cliente')
-            id_usuario = request.json.get('id_usuario', '').strip().lower()
-
-            # Validar que se hayan enviado los parámetros
-            if not id_cliente or not id_usuario:
-                return jsonify({"message": "Faltan parámetros: id_cliente o id_usuario"}), 400
-
-            # Llamar a la función interna para obtener la información del usuario
-            user_data = obtener_user_menu(id_cliente, id_usuario)
-
-            # Verificar si la función retornó un resultado
-            if user_data:
-                # Omitir user_data en la respuesta
-                return jsonify({"message": "Información del usuario obtenida correctamente."}), 200
-            else:
-                return jsonify({"message": "No se ha encontrado información para este usuario."}), 404
-
-        except Exception as e:
-            # logger.error("Error al obtener el menú del usuario: %s", e)  # Omitido
-            return jsonify({"message": "Error interno al procesar la solicitud."}), 500
-
-    # Si no es POST, devolver un error 405 (Método no permitido)
-    return jsonify({"message": "Método no permitido"}), 405
-
-
-@ app.route('/mod/<module_name>')
+@app.route('/mod/<module_name>')
 def load_module(module_name):
     """Ruta dinámica para cargar módulos."""
     # Validar el nombre del módulo para evitar accesos no deseados
@@ -259,11 +215,11 @@ def load_module(module_name):
         return redirect(url_for('menu'))
 
 
-@ app.route('/mod/mAdmcreusr', methods=['GET', 'POST'])
+@app.route('/mod/mAdmcreusr', methods=['GET', 'POST'])
 def crear_usuario():
     # Suponiendo que tienes el id_usuario disponible en la sesión o en el contexto
     # Obtén el id del usuario que hizo login
-    id_usuario = session.get('id_usuario', '').strip().lower()
+    id_usuario = session.get('id_usuario')
 
     if request.method == 'POST':
         # Obtener datos del formulario
@@ -273,7 +229,7 @@ def crear_usuario():
         nomb_usr = request.form.get('nomb_usr')
         ape_pat_usr = request.form.get('ape_pat_usr')
         ape_mat_usr = request.form.get('ape_mat_usr')
-        ema_usr = request.form.get('ema_usr').lower()
+        ema_usr = request.form.get('ema_usr')
         cel_usr = request.form.get('cel_usr')
         id_tda = request.form.get('id_tda')
         id_prf = request.form.get('id_prf')
@@ -307,492 +263,427 @@ def crear_usuario():
 
     return render_template('mod/mAdmcreusr.html')
 
-# version 1
-# @ app.route('/reset_user_password', methods=['POST'])
-# def reset_user_password():
-#     # Obtener datos del formulario
-#     id_usuario = request.form['id_usuario']
-#     ID_CLIENTE = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
-#     pwd = request.form['pwd']
-#     confirm_pwd = request.form['confirm_pwd']
 
-#     # Verificar si las contraseñas coinciden
-#     if pwd != confirm_pwd:
-#         flash("Las contraseñas no coinciden.", "error")
-#         # Redirige de nuevo al formulario si hay error
-#         return redirect(url_for('mAdmrstpwd'))
+@app.route('/get_user_menu', methods=['POST'])
+def get_user_menu():
+    if request.method == 'POST':
+        try:
+            # Obtener los datos enviados en la solicitud
+            id_cliente = request.json.get('id_cliente')
+            id_usuario = request.json.get('id_usuario')
 
-#     try:
-#         # Conexión a la base de datos y ejecutar la función SQL Change_password
-#         with get_db_connection() as conn:
-#             with conn.cursor() as cur:
-#                 # Ejecutar la función SQL Change_password
-#                 cur.execute("SELECT Change_password(%s, %s, %s)",
-#                             (id_usuario.lower(), ID_CLIENTE, pwd))  # Usar id_usuario y ID_CLIENTE fijo
-#                 conn.commit()  # Guardar los cambios en la base de datos
+            # Validar que se hayan enviado los parámetros
+            if not id_cliente or not id_usuario:
+                return jsonify({"message": "Faltan parámetros: id_cliente o id_usuario"}), 400
 
-#         flash("Contraseña restablecida con éxito.", "success")
-#         # Redirige a la página de inicio de sesión tras éxito
-#         return redirect(url_for('menu'))
+            # Llamar a la función get_user_menu de la base de datos
+            with get_db_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT public.get_user_menu(%s, %s)",
+                                (id_cliente, id_usuario))
+                    result = cur.fetchone()
 
-#     except Exception as e:
-#         flash(f"Error: {str(e)}", "error")
-#         # Redirige de nuevo al formulario si falla
-#         return redirect(url_for('mAdmrstpwd'))
+            # Verificar si la función retornó un resultado
+            if result and result[0]:
+                user_menu_json = result[0]
 
+                # Aquí imprimes el JSON que devuelve la función SQL
+                print(
+                    f"Resultado de la función SQL (user_menu_json): {user_menu_json}")
 
-def enviar_correo(email, nueva_contrasena):
-    mensaje = f"Tu nueva contraseña temporal es: {nueva_contrasena}"
-    msg = MIMEText(mensaje)
-    msg['Subject'] = 'Restablecimiento de Contraseña'
-    msg['From'] = 'reset_pass@portal.sms-vivo.com'
-    msg['To'] = email
+                # Asegúrate de que user_menu_json tenga la estructura adecuada
+                # Ejemplo de estructura esperada:
+                # user_menu_json = {
+                #     "raz_social": "Nombre de la Empresa",
+                #     "nom_usr": "VENDEDOR",
+                #     "dsc": "Descripción del Usuario",
+                #     "modulos": ["Modulo1", "Modulo2", "Modulo3"]
+                # }
 
-    try:
-        with smtplib.SMTP('mail.auraslt.com', 465) as server:
-            server.starttls()
-            # Reemplaza con tu contraseña
-            server.login('info@auraslt.com', '1nf0@23!')
-            server.sendmail('reset_pass@portal.sms-vivo.com',
-                            email, msg.as_string())
-        print("Correo enviado con éxito")
-    except Exception as e:
-        print(f"Error al enviar correo: {e}")
+                return jsonify(user_menu_json), 200
+            else:
+                return jsonify({"message": "No se ha encontrado información para este usuario."}), 404
+
+        except Exception as e:
+            logger.error("Error al obtener el menú del usuario: %s", e)
+            return jsonify({"message": "Error interno al procesar la solicitud."}), 500
+
+    # Si no es POST, devolver un error 405 (Método no permitido)
+    return jsonify({"message": "Método no permitido"}), 405
 
 
-@ app.route('/restpass', methods=['POST'])
-def restpass():
-    # id_usuario = session.get('id_usuario')
-    id_usuario = request.form.get('id_usuario', '').strip().lower()
-    ID_CLIENTE = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
-    email_usr = request.form['email_usr']
-
-    print(id_usuario, ID_CLIENTE, email_usr)
-    try:
-        # Llama a la función SQL para restablecer la contraseña
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT restablecer_contraseña(%s, %s, %s)",
-                            (id_usuario, ID_CLIENTE, email_usr))
-                # Después de la ejecución, generamos una nueva contraseña para el correo
-                # Genera una nueva contraseña si es necesario
-                nueva_contrasena = "Aquí puedes generar o recuperar la nueva contraseña"
-
-        # Envía el correo electrónico con la nueva contraseña
-        enviar_correo(email_usr, nueva_contrasena)
-        flash("Se ha enviado un correo con la nueva contraseña.")
-        # Redirige a la página de inicio de sesión o donde desees
-        return redirect(url_for('login'))
-    except Exception as e:
-        flash(str(e))  # Muestra el error al usuario
-        # Redirige a la página de restablecimiento
-        return redirect(url_for('restpass'))
-
-##no esta retornado nada al formulario html! aquí
-@app.route('/get_users', methods=['GET'])
-def get_users():
-    ID_CLIENTE = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
-    try:
-        # Conexión a la base de datos y ejecución de la función SQL get_users
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT get_users(%s)", (ID_CLIENTE))
-                users = cur.fetchall()
-
-        # Formatear los resultados en un JSON
-        user_list = [
-            {
-                'id_usr': user[0],
-                'raz_social': user[1],
-                'nom_usr': user[2],
-                'dsc': user[3],
-                'pwd': user[4]
-            }
-            for user in users
-        ]
-        return jsonify(user_list)
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-# Ruta para procesar el cambio de contraseña
-@app.route('/reset_user_password', methods=['POST'])
-def reset_user_password():
-    id_usuario = request.form['id_usuario']
-    # Ajusta este valor según lo necesario
-    ID_CLIENTE = session.get('ID_CLIENTE', 'ID_CLIENTE_DEFAULT')
-    pwd = request.form['pwd']
-    confirm_pwd = request.form['confirm_pwd']
-
-    if pwd != confirm_pwd:
-        return jsonify({"status": "error", "message": "Las contraseñas no coinciden."})
-
-    try:
-        # Llamada a la función SQL para cambiar la contraseña (Change_password)
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT Change_password(%s, %s, %s)",
-                            (id_usuario.lower(), ID_CLIENTE, pwd))
-                conn.commit()
-
-        return jsonify({"status": "OK", "message": "Contraseña restablecida con éxito."})
-
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({"status": "error", "message": "Error al restablecer la contraseña."})
-
-
-# Rutas HTML de Modulos
-
-
-@ app.route('/restpass')
-def restpass_view():
-    return render_template('restpass.html')
-
-
-# # # Ruta para mostrar el formulario de restablecimiento de contraseña
-@app.route('/mod/mAdmrstpwd', methods=['GET'])
-def mostrar_reset_password():
-    return render_template('mod/mAdmrstpwd.html')
-
-
-@app.route('/mod/mAdmrstpwd')
-def reset_password():
-    return render_template('mod/mAdmrstpwd.html')
-
-
-# @ app.route('/mod/reset_password_form')
-# def reset_password_form():
-#     return render_template('mAdmrstpwd.html')
-
-
-@ app.route('/mod/mAdmcreusr')
+@app.route('/mod/mAdmcreusr')
 def mAdmcreusr():
     return render_template('mAdmcreusr.html')
 
 
-@ app.route('/mod/mAdmgstrol')
+@app.route('/mod/mAdmgstrol')
 def mAdmgstrol():
     return render_template('mod/mAdmgstrol.html')
 
 
-@ app.route('/mod/mAdmgstper')
+@app.route('/mod/mAdmgstper')
 def mAdmgstper():
     return render_template('mod/mAdmgstper.html')
 
 
-@ app.route('/mod/mAdmmonact')
+@app.route('/mod/mAdmmonact')
 def mAdmmonact():
     return render_template('mod/mAdmmonact.html')
 
 
-# @app.route('/mod/mAdmrstpwd')
-# def mAdmrstpwd():
-#    return render_template('mod/mAdmrstpwd.html')
+@app.route('/mod/mAdmrstpwd')
+def mAdmrstpwd():
+    return render_template('mod/mAdmrstpwd.html')
 
 
-@ app.route('/mod/mAdmcfgnot')
+@app.route('/mod/mAdmcfgnot')
 def mAdmcfgnot():
     return render_template('mod/mAdmcfgnot.html')
 
 
-@ app.route('/mod/mAdmmntdat')
+@app.route('/mod/mAdmmntdat')
 def mAdmmntdat():
     return render_template('mod/mAdmmntdat.html')
 
+# Menu
 
-@ app.route('/mod/mGescrgart')
+
+# @app.route('/mGesdmaest')
+# def mGesdmaest():
+#    return render_template('mGesdmaest.html')
+# Modulos
+
+
+@app.route('/mod/mGescrgart')
 def mGescrgart():
     return render_template('mod/mGescrgart.html')
 
 
-@ app.route('/mod/mGescrgtnd')
+@app.route('/mod/mGescrgtnd')
 def mGescrgtnd():
     return render_template('mod/mGescrgtnd.html')
 
 
-@ app.route('/mod/mGescrgcli')
+@app.route('/mod/mGescrgcli')
 def mGescrgcli():
     return render_template('mod/mGescrgcli.html')
 
 
-@ app.route('/mod/mGescrgprv')
+@app.route('/mod/mGescrgprv')
 def mGescrgprv():
     return render_template('mod/mGescrgprv.html')
 
 
-@ app.route('/mod/mGescrgcat')
+@app.route('/mod/mGescrgcat')
 def mGescrgcat():
     return render_template('mod/mGescrgcat.html')
 
 
-@ app.route('/mod/mGescrgprc')
+@app.route('/mod/mGescrgprc')
 def mGescrgprc():
     return render_template('mod/mGescrgprc.html')
 
 
-@ app.route('/mod/mGescrgimp')
+@app.route('/mod/mGescrgimp')
 def mGescrgimp():
     return render_template('mod/mGescrgimp.html')
 
 
-@ app.route('/mod/mGescrgpro')
+@app.route('/mod/mGescrgpro')
 def mGescrgpro():
     return render_template('mod/mGescrgpro.html')
 
+# Menu
 
-@ app.route('/mod/mInvcrginv')
+
+# @app.route('/mPInventar')
+# def mPInventar():
+#    return render_template('mPInventar.html')
+
+# Modulos
+
+
+@app.route('/mod/mInvcrginv')
 def mInvcrginv():
     return render_template('mod/mInvcrginv.html')
 
 
-@ app.route('/mod/mInvstktnd')
+@app.route('/mod/mInvstktnd')
 def mInvstktnd():
     return render_template('mod/mInvstktnd.html')
 
 
-@ app.route('/mod/mInvstkcli')
+@app.route('/mod/mInvstkcli')
 def mInvstkcli():
     return render_template('mod/mInvstkcli.html')
 
 
-@ app.route('/mod/mInvstkjer')
+@app.route('/mod/mInvstkjer')
 def mInvstkjer():
     return render_template('mod/mInvstkjer.html')
 
 
-@ app.route('/mod/mInvajstin')
+@app.route('/mod/mInvajstin')
 def mInvajstin():
     return render_template('mod/mInvajstin.html')
 
 
-@ app.route('/mod/mInvgstdev')
+@app.route('/mod/mInvgstdev')
 def mInvgstdev():
     return render_template('mod/mInvgstdev.html')
 
 
-@ app.route('/mod/mInvctlcad')
+@app.route('/mod/mInvctlcad')
 def mInvctlcad():
     return render_template('mod/mInvctlcad.html')
 
 
-@ app.route('/mod/mInvgstlot')
+@app.route('/mod/mInvgstlot')
 def mInvgstlot():
     return render_template('mod/mInvgstlot.html')
 
 
-@ app.route('/mod/mInvhismov')
+@app.route('/mod/mInvhismov')
 def mInvhismov():
     return render_template('mod/mInvhismov.html')
 
+# Menu
 
-@ app.route('/mod/mGesanlven')
+
+# @app.route('/mPgesanlve')
+# def mPgesanlve():
+#    return render_template('mPgesanlve.html')
+# Modulo
+
+
+@app.route('/mod/mGesanlven')
 def mGesanlven():
     return render_template('mod/mGesanlven.html')
 
 
-@ app.route('/mod/mGesvendia')
+@app.route('/mod/mGesvendia')
 def mGesvendia():
     return render_template('mod/mGesvendia.html')
 
 
-@ app.route('/mod/mGesvenret')
+@app.route('/mod/mGesvenret')
 def mGesvenret():
     return render_template('mod/mGesvenret.html')
 
 
-@ app.route('/mod/mGesdevree')
+@app.route('/mod/mGesdevree')
 def mGesdevree():
     return render_template('mod/mGesdevree.html')
 
 
-@ app.route('/mod/mGesclifre')
+@app.route('/mod/mGesclifre')
 def mGesclifre():
     return render_template('mod/mGesclifre.html')
 
 
-@ app.route('/mod/mGespromde')
+@app.route('/mod/mGespromde')
 def mGespromde():
     return render_template('mod/mGespromde.html')
 
 
-@ app.route('/mod/mGesfactur')
+@app.route('/mod/mGesfactur')
 def mGesfactur():
     return render_template('mod/mGesfactur.html')
 
 
-@ app.route('/mod/mGespagcob')
+@app.route('/mod/mGespagcob')
 def mGespagcob():
     return render_template('mod/mGespagcob.html')
 
 
-@ app.route('/mod/mGessegven')
+@app.route('/mod/mGessegven')
 def mGessegven():
     return render_template('mod/mGessegven.html')
+# Menu
 
 
-@ app.route('/mod/mRepinfven')
+# @app.route('/mPreportes')
+# def mPreportes():
+#    return render_template('mPreportes.html')
+# Modulo
+
+
+@app.route('/mod/mRepinfven')
 def mRepinfven():
     return render_template('mod/mRepinfven.html')
 
 
-@ app.route('/mod/mRepinfstk')
+@app.route('/mod/mRepinfstk')
 def mRepinfstk():
     return render_template('mod/mRepinfstk.html')
 
 
-@ app.route('/mod/mRepventnd')
+@app.route('/mod/mRepventnd')
 def mRepventnd():
     return render_template('mod/mRepventnd.html')
 
 
-@ app.route('/mod/mRepsugcom')
+@app.route('/mod/mRepsugcom')
 def mRepsugcom():
     return render_template('mod/mRepsugcom.html')
 
 
-@ app.route('/mod/mReptoppro')
+@app.route('/mod/mReptoppro')
 def mReptoppro():
     return render_template('mod/mReptoppro.html')
 
 
-@ app.route('/mod/mRepdetpro')
+@app.route('/mod/mRepdetpro')
 def mRepdetpro():
     return render_template('mod/mRepdetpro.html')
 
 
-@ app.route('/mod/mRepcummet')
+@app.route('/mod/mRepcummet')
 def mRepcummet():
     return render_template('mod/mRepcummet.html')
 
 
-@ app.route('/mod/mRepinfcli')
+@app.route('/mod/mRepinfcli')
 def mRepinfcli():
     return render_template('mod/mRepinfcli.html')
 
 
-@ app.route('/mod/mRepinfprv')
+@app.route('/mod/mRepinfprv')
 def mRepinfprv():
     return render_template('mod/mRepinfprv.html')
 
 
-@ app.route('/mod/mRepinfdev')
+@app.route('/mod/mRepinfdev')
 def mRepinfdev():
     return render_template('mod/mRepinfdev.html')
 
 
-@ app.route('/mod/mRepinffin')
+@app.route('/mod/mRepinffin')
 def mRepinffin():
     return render_template('mod/mRepinffin.html')
 
 
-@ app.route('/mod/mRepinfemp')
+@app.route('/mod/mRepinfemp')
 def mRepinfemp():
     return render_template('mod/mRepinfemp.html')
 
 
-@ app.route('/mod/mRepinfinv')
+@app.route('/mod/mRepinfinv')
 def mRepinfinv():
     return render_template('mod/mRepinfinv.html')
 
 
-@ app.route('/mod/mRepinfmkt')
+@app.route('/mod/mRepinfmkt')
 def mRepinfmkt():
     return render_template('mod/mRepinfmkt.html')
 
 
-@ app.route('/mod/mRepinfcum')
+@app.route('/mod/mRepinfcum')
 def mRepinfcum():
     return render_template('mod/mRepinfcum.html')
 
 
-@ app.route('/mod/mRepinften')
+@app.route('/mod/mRepinften')
 def mRepinften():
     return render_template('mod/mRepinften.html')
 
 
-@ app.route('/mod/mRepinfsat')
+@app.route('/mod/mRepinfsat')
 def mRepinfsat():
     return render_template('mod/mRepinfsat.html')
+# Menu
 
 
-@ app.route('/mod/mGesrptasg')
+# @app.route('/mPgesdasis')
+# def mPgesdasis():
+#    return render_template('mPgesdasis.html')
+# Modulo
+
+
+@app.route('/mod/mGesrptasg')
 def mGesrptasg():
     return render_template('mod/mGesrptasg.html')
 
 
-@ app.route('/mod/mGesrptasc')
+@app.route('/mod/mGesrptasc')
 def mGesrptasc():
     return render_template('mod/mGesrptasc.html')
 
 
-@ app.route('/mod/mGesrptast')
+@app.route('/mod/mGesrptast')
 def mGesrptast():
     return render_template('mod/mGesrptast.html')
 
 
-@ app.route('/mod/mGesrptret')
+@app.route('/mod/mGesrptret')
 def mGesrptret():
     return render_template('mod/mGesrptret.html')
 
 
-@ app.route('/mod/mGesrptaus')
+@app.route('/mod/mGesrptaus')
 def mGesrptaus():
     return render_template('mod/mGesrptaus.html')
 
 
-@ app.route('/mod/mGesrpthex')
+@app.route('/mod/mGesrpthex')
 def mGesrpthex():
     return render_template('mod/mGesrpthex.html')
 
 
-@ app.route('/mod/mGesrptsal')
+@app.route('/mod/mGesrptsal')
 def mGesrptsal():
     return render_template('mod/mGesrptsal.html')
 
 
-@ app.route('/mod/mGesrptmar')
+@app.route('/mod/mGesrptmar')
 def mGesrptmar():
     return render_template('mod/mGesrptmar.html')
 
 
-@ app.route('/mod/mGesrptinc')
+@app.route('/mod/mGesrptinc')
 def mGesrptinc():
     return render_template('mod/mGesrptinc.html')
 
 
-@ app.route('/mod/mGesrptcum')
+@app.route('/mod/mGesrptcum')
 def mGesrptcum():
     return render_template('mod/mGesrptcum.html')
 
 
-@ app.route('/mod/mGesrptres')
+@app.route('/mod/mGesrptres')
 def mGesrptres():
     return render_template('mod/mGesrptres.html')
 
 
-@ app.route('/mod/mGesrptvac')
+@app.route('/mod/mGesrptvac')
 def mGesrptvac():
     return render_template('mod/mGesrptvac.html')
+# Menu
 
 
-@ app.route('/mod/mGesaltqui')
+# @app.route('/mPgesdaler')
+# def mPgesdaler():
+#    return render_template('mPgesdaler.html')
+# Modulo
+
+
+@app.route('/mod/mGesaltqui')
 def mGesaltqui():
     return render_template('mod/mGesaltqui.html')
 
 
-@ app.route('/mod/mGesaltnds')
+@app.route('/mod/mGesaltnds')
 def mGesaltnds():
     return render_template('mod/mGesaltnds.html')
 
 
-@ app.route('/mod/mGesaltsob')
+@app.route('/mod/mGesaltsob')
 def mGesaltsob():
     return render_template('mod/mGesaltsob.html')
 
 
-@ app.route('/dev')
+@app.route('/dev')
 def dev():
     """Ruta para desarrollo o manejo de errores."""
     return render_template('dev.html')
@@ -800,13 +691,13 @@ def dev():
 # Manejo de errores personalizados
 
 
-@ app.errorhandler(404)
+@app.errorhandler(404)
 def pagina_no_encontrada(e):
     """Manejador para errores 404."""
     return render_template('404.html'), 404
 
 
-@ app.errorhandler(500)
+@app.errorhandler(500)
 def error_interno(e):
     """Manejador para errores 500."""
     return render_template('500.html'), 500

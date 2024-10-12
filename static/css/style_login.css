@@ -1,144 +1,124 @@
-/* Estilos específicos para login.html */
-
-.logo {
-    width: 500px;
-    height: auto;
-    margin-top: 10px;
-    margin-bottom: 30px;
-    /* Espacio entre el logo y el body */
-}
-
-/* General */
 body {
-    font-family: 'Montserrat', sans-serif;
-    margin: 0;
-    background-color: #ffffff;
-    /* Fondo blanco para contraste */
-    font-size: 16px;
-    font-weight: 400;
-    color: #34495e;
-    /* Color de texto moderno */
-    line-height: 1.5;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #d0f0fd, #74A8ED);
     display: flex;
-    flex-direction: column;
-    height: 100vh;
-    align-items: center;
     justify-content: center;
-
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    flex-direction: column;
 }
 
-/* Estilo del encabezado */
-h1 {
-    color: #34495e;
-    font-size: 2.5rem;
+.header {
     text-align: center;
     margin-bottom: 20px;
 }
 
-/* Estilo del formulario */
+.logo {
+    width: 480px;
+    height: auto;
+    margin-bottom: 10px;
+}
+
 .form-container {
     background-color: #d0f0fd;
-    padding: 45px;
+    padding: 40px;
     border-radius: 10px;
-    max-width: 450px;
-    width: 100%;
-    box-shadow: 0px 4px 10px rgba(147, 201, 221, 0.5);
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    /* Asegura que el contenido esté centrado verticalmente */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 90%;
+    /* Ancho del 90% para móviles */
+    max-width: 400px;
+    /* Ancho máximo para pantallas grandes */
 }
 
-/* Estilo para los inputs */
+/* Estilo para los inputs y botones */
 input[type="text"],
-input[type="password"] {
-    width: 100%;
-    /* Full width */
-    padding: 15px;
-    margin: 10px 0;
-    border: 1px solid #74A8ED;
-    /* Borde azul */
-    border-radius: 5px;
-    background-color: #f0f8ff;
-    /* Fondo más claro para inputs */
-    color: #34495e;
-    /* Color de texto oscuro para contraste */
-    font-size: 1rem;
-    text-align: left;
-    /* Centra el texto dentro de los campos */
-}
-
-/* Placeholder de los inputs */
-input[type="text"]::placeholder,
-input[type="password"]::placeholder {
-    color: #b0b0b0;
-    /* Color del placeholder */
-}
-
-/* Botón */
+input[type="password"],
 button {
-    width: 110%;
-    /* Ajusta el ancho del botón */
-    padding: 12px;
-    /* Ajusta el padding para que sea más pequeño */
-    background-color: #74A8ED;
-    /* Color de fondo azul */
-    color: #ffffff;
-    /* Color del texto en el botón */
-    border: none;
+    background-color: white;
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
     border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+/* Estilo para el botón */
+button {
+    background-color: #74A8ED;
+    color: white;
     cursor: pointer;
-    font-size: 1rem;
-    font-weight: 600;
+    border: none;
+    margin-top: 20px;
     transition: background-color 0.3s ease;
-    margin-top: 15px;
-    /* Espacio superior para separación */
+    font-weight: bold;
+    font-size: 18px;
 }
 
 button:hover {
-    background-color: #1abc9c;
-    /* Color de hover moderno */
+    background-color: #3483fa;
 }
 
-/* Texto de error */
-p {
-    color: #fa0505;
-    /* Color para mensajes de error */
-    text-align: center;
-}
-
-/* Espaciado para evitar que el contenido quede detrás del formulario */
-.content {
-    margin-top: 60px;
-    /* Ajusta esto según el diseño */
-}
-
-/* Estilos de enlaces (como el botón Cerrar sesión) */
-a {
+.forgot-password {
     display: block;
-    width: 80%;
-    /* Ajusta el ancho del enlace */
-    max-width: 200px;
-    margin: 20px auto;
-    padding: 15px;
-    background-color: #74A8ED;
-    /* Color de fondo para el enlace */
-    color: #ffffff;
-    /* Color del texto en el enlace */
+    margin-top: 20px;
     text-align: center;
-    /* Centra el texto */
-    text-decoration: none;
-    /* Sin subrayado */
-    border-radius: 5px;
-    /* Esquinas redondeadas */
-    font-size: 1rem;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
+    color: black;
+    background-color: transparent;
+    cursor: pointer;
 }
 
-a:hover {
-    background-color: #1abc9c;
-    /* Color de hover para el enlace */
+.flash-messages {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.alert {
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+}
+
+.alert.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    font-weight: bold;
+}
+
+.alert.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    font-weight: bold;
+}
+
+
+.input-group label {
+    font-weight: bold;
+    font-size: 16px;
+    display: block;
+    margin-bottom: 2px;
+}
+
+@media (min-width: 768px) {
+    .form-container {
+        width: 60%;
+        /* Ancho del 60% en tabletas */
+    }
+}
+
+@media (min-width: 1024px) {
+    .form-container {
+        width: 40%;
+        /* Ancho del 40% en computadoras de escritorio */
+    }
 }

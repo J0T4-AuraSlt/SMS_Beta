@@ -388,7 +388,7 @@ def restpass():
         # Redirige a la página de restablecimiento
         return redirect(url_for('restpass'))
 
-##no esta retornado nada al formulario html! aquí
+
 @app.route('/get_users', methods=['GET'])
 def get_users():
     ID_CLIENTE = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)

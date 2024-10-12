@@ -4,8 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menú Principal SMS</title>
-    <link rel="icon" href="{{ url_for('static', filename='imagen/favicon-vivo.png') }}" type="image/x-icon"> <!-- Agregar favicon -->
+    <title>Home</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
 
     <script>
@@ -26,9 +25,9 @@
                 });
         }
 
-        function saveCurrentModule(url) {
-            sessionStorage.setItem('lastModule', url); // Guardar la URL del módulo actual
-        }
+       // function saveCurrentModule(url) {
+        //    sessionStorage.setItem('lastModule', url); // Guardar la URL del módulo actual
+        //}
 
         function loadLastModule() {
             const lastModule = sessionStorage.getItem('lastModule');
@@ -53,7 +52,7 @@
             });
 
             // Cargar el último módulo visitado al iniciar la página
-            //loadLastModule();
+            loadLastModule();
         });
     </script>
 </head>
@@ -61,8 +60,8 @@
 <body>
     <div class="info-bar">
         <img src="{{ url_for('static', filename='imagen/logo-clt.png') }}" alt="Logo de la Empresa" class="logotwo">
-        <span>Cliente: {{ raz_social }}</span>
-        <span>Usuario: {{ nom_usr|upper }}</span>
+        <span>Cliente: VIVO - Solutions 2 GO</span>
+        <span>Usuario: {{ id_usuario.upper() }}</span>
         <span>Fecha y Hora: {{ fecha_hora }}</span>
 
         <div class="cerrar-sesion">
@@ -95,21 +94,17 @@
         </nav>
 
         <div class="content" style="flex-grow: 2; padding: 20px;">
-            <h2>Bienvenido</h2>
-            <p>Hola <strong>{{ nom_usr }}</strong>, tu perfil es: <strong>{{ dsc.upper() }}</strong>.</p>
-            <p>Por favor selecciona un módulo del menú para visualizar su contenido.</p>
-            <p><strong>Tienes acceso a:</strong></p>
-            {% if load_module %}
-                <ul>
-                    {% for modulo in load_module %}
-                        <li>{{ modulo }}</li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <strong>No tienes acceso a ningún módulo.</strong>
-            {% endif %}
+            <p>Hola <strong>{{ nom_usr|capitalize }}, </strong>tu perfil es: <strong>{{ dsc|capitalize }}</strong>. Por favor seleccione un módulo del menú para visualizar su contenido.</p>
+            <p>Tienes accesos a:
+                {% if load_module %}
+                    <strong>{% for modulo in load_module %}
+                        {{ modulo }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}</strong>
+                {% else %}
+                    <strong>No tienes acceso a ningún módulo.</strong>
+                {% endif %}
+            </p>            
         </div>
-        
     </div>
 </body>
 
