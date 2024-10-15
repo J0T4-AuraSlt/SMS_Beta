@@ -5,11 +5,97 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administración, Gestión de Roles y Permisos</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_mod.css') }}">
+    <!--link rel="stylesheet" href="{{ url_for('static', filename='css/style_mod.css') }}"-->
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Estilo para los módulos */
+        .modulo {
+            background-color: #ffffff; /* Color de fondo uniforme */
+            border-radius: 10px; /* Bordes redondeados */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra sutil */
+            padding: 20px; /* Espaciado interno */
+            margin-bottom: 20px; /* Espaciado entre módulos */
+        }
+
+        /* Estilo para el título de los módulos */
+        .modulo h1 {
+            font-size: 1.8rem; /* Tamaño de fuente para el título */
+            color: #5d5d5d; /* Color de texto */
+            margin-bottom: 10px; /* Margen inferior */
+            text-align: center; /* Centrar el título */
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555; /* Color de texto de las etiquetas */
+        }
+
+        input, select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: border-color 0.3s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            width: 100%; /* Asegurar que los campos ocupen todo el ancho */
+            margin-bottom: 15px; /* Espacio entre campos */
+        }
+
+        input:focus, select:focus {
+            border-color: #007BFF; /* Cambia el color del borde al enfocar */
+            outline: none; /* Quitar el contorno por defecto */
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            background-color: #007BFF;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3; /* Cambiar color al pasar el mouse */
+            transform: translateY(-2px); /* Sutil efecto de elevación */
+        }
+
+        button.delete-field {
+            background-color: #dc3545; /* Color para el botón de cancelar */
+        }
+
+        button.delete-field:hover {
+            background-color: #c82333; /* Cambiar color de botón de cancelar */
+        }
+
+        .flash-message {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .flash-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .flash-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
 </head>
 <body>
 
-<div class="container2">
+<div class="modulo">
     <h1>Gestión de Roles y Permisos</h1>
 
     <!-- Mensajes de Flash para Errores o Éxitos -->

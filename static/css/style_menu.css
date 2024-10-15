@@ -106,7 +106,7 @@ body {
 }
 
 .navbar ul li:hover ul.submenu {
-    display: block;
+    display: none;
 }
 
 .navbar ul li ul.submenu li a {
@@ -222,4 +222,28 @@ footer {
     position: fixed;
     width: 100%;
     bottom: 0;
+}
+
+/* Estilo para los módulos */
+.modulo {
+    background-color: #ffffff;
+    /* Color de fondo uniforme */
+    border-radius: 10px;
+    /* Bordes redondeados */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    /* Sombra sutil */
+    padding: 20px;
+    /* Espaciado interno */
+    margin-bottom: 20px;
+    /* Espaciado entre módulos */
+}
+
+/* Estilo para el título de los módulos */
+.modulo h3 {
+    font-size: 1.5rem;
+    /* Tamaño de fuente para los títulos */
+    color: #5d5d5d;
+    /* Color de texto */
+    margin-bottom: 10px;
+    /* Margen inferior */
 }

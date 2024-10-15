@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menú Principal SMS</title>
-    <link rel="icon" href="{{ url_for('static', filename='imagen/favicon-vivo.png') }}" type="image/x-icon"> <!-- Agregar favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='imagen/favicon-vivo.png') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
 
     <script>
@@ -18,7 +18,7 @@
                     return response.text();
                 })
                 .then(data => {
-                    document.querySelector('.content').innerHTML = data;
+                    document.querySelector('.content').innerHTML = data; // Cargar contenido en el área de contenido
                 })
                 .catch(error => {
                     console.error('Hubo un problema con la solicitud Fetch:', error);
@@ -30,30 +30,34 @@
             sessionStorage.setItem('lastModule', url); // Guardar la URL del módulo actual
         }
 
-        function loadLastModule() {
-            const lastModule = sessionStorage.getItem('lastModule');
-            if (lastModule) {
-                cargarModulo(lastModule); // Cargar el último módulo visitado
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', function () {
-            const links = document.querySelectorAll('.navbar a');
+            const links = document.querySelectorAll('.navbar > ul > li > a'); // Selecciona solo los enlaces de nivel superior
 
             links.forEach(link => {
                 link.addEventListener('click', function (e) {
-                    e.preventDefault();
+                    e.preventDefault(); // Prevenir el comportamiento por defecto del enlace
+                    const submenu = this.nextElementSibling; // Obtener el submenú correspondiente
+
+                    if (submenu) {
+                        // Alternar la visibilidad del submenú
+                        submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+                    }
+                });
+            });
+
+            // Agregar click a los enlaces de los submenús
+            const submenuLinks = document.querySelectorAll('.submenu a');
+            submenuLinks.forEach(submenuLink => {
+                submenuLink.addEventListener('click', function (e) {
+                    e.preventDefault(); // Evitar la redirección
                     const url = this.getAttribute('href');
 
-                    if (url && url !== '#') {
+                    if (url) {
                         cargarModulo(url); // Cargar el módulo usando la URL correcta
                         saveCurrentModule(url); // Guardar el módulo actual
                     }
                 });
             });
-
-            // Cargar el último módulo visitado al iniciar la página
-            //loadLastModule();
         });
     </script>
 </head>
@@ -109,7 +113,6 @@
                 <strong>No tienes acceso a ningún módulo.</strong>
             {% endif %}
         </div>
-        
     </div>
 </body>
 

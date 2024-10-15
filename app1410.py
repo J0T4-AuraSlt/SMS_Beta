@@ -23,7 +23,7 @@ app.config.update(
     SESSION_COOKIE_SAMESITE='Lax'
 )
 
-# Valor por defecto, se puede ajustar según la lógica de la aplicación
+# Valor por defecto para ID_CLIENTE
 ID_CLIENTE_DEFAULT = 4
 
 
@@ -63,7 +63,7 @@ def index():
 @app.route('/login', methods=['POST'])
 def login():
     """Maneja el proceso de login del usuario."""
-    ID_CLIENTE = ID_CLIENTE_DEFAULT  # Puedes ajustar esta lógica para obtener el ID_CLIENTE desde la URL u otra fuente
+    ID_CLIENTE = ID_CLIENTE_DEFAULT  # Ajustar según la lógica de la aplicación
     id_usuario = request.form.get('id_usuario', '').strip().lower()
     pwd = request.form.get('pwd', '').strip()
 
@@ -71,16 +71,12 @@ def login():
         flash("Por favor, completa ambos campos para continuar ;).", "error")
         return render_template('login.html')
 
-    # Validar las credenciales de acceso
     validacion = valida_acceso(ID_CLIENTE, id_usuario, pwd)
 
     if validacion.startswith('OK'):
-        # Almacenar en la sesión
         session['ID_CLIENTE'] = ID_CLIENTE
         session['id_usuario'] = id_usuario
         logger.info("ID_CLIENTE: %s, id_usuario: %s", ID_CLIENTE, id_usuario)
-
-        # Redirigir a /menu
         return redirect(url_for('menu'))
     else:
         error = validacion.split(
@@ -118,19 +114,14 @@ def get_menu(ID_CLIENTE, id_usuario):
                 result = cur.fetchone()
 
         if result and result[0]:
-            if isinstance(result[0], list):
-                menu_json = result[0]
-            else:
-                try:
-                    menu_json = json.loads(result[0])
-                except json.JSONDecodeError:
-                    logger.error("Error al decodificar el menú JSON.")
-                    return {"message": "Error al decodificar el menú desde el servidor."}
+            try:
+                menu_json = json.loads(result[0]) if isinstance(
+                    result[0], str) else result[0]
+            except json.JSONDecodeError:
+                logger.error("Error al decodificar el menú JSON.")
+                return {"message": "Error al decodificar el menú desde el servidor."}
 
-            if not menu_json:
-                return {"message": "El menú no tiene información disponible."}
-
-            return menu_json
+            return menu_json if menu_json else {"message": "El menú no tiene información disponible."}
         else:
             return {"message": "No se ha encontrado información para este usuario."}
     except Exception as e:
@@ -147,14 +138,7 @@ def obtener_user_menu(ID_CLIENTE, id_usuario):
                             (ID_CLIENTE, id_usuario))
                 result = cur.fetchone()
 
-        if result and result[0]:
-            user_menu_json = result[0]
-            logger.info(
-                f"Resultado de la función SQL (user_menu_json): {user_menu_json}")
-            # Asegúrate de que el JSON se convierta a un diccionario
-            return json.loads(user_menu_json) if isinstance(user_menu_json, str) else user_menu_json
-        else:
-            return None
+        return json.loads(result[0]) if result and result[0] else None
     except Exception as e:
         logger.error("Error al obtener la información del usuario: %s", e)
         return None
@@ -168,39 +152,32 @@ def menu():
 
     logger.info(f"ID_CLIENTE: {ID_CLIENTE}, id_usuario: {id_usuario}")
 
-    # Verificar si hay sesión válida
     if not id_usuario:
-        logger.info("Redireccionando a dev: falta id_usuario")
-        return redirect(url_for('dev'))
+        flash("No estás autenticado. Redirigiendo al login...", "warning")
+        return redirect(url_for('index'))  # Redireccionar a la página de login
 
-    # Llamar a la función para obtener el menú
     menu_json = get_menu(ID_CLIENTE, id_usuario)
     logger.info(f"Menu JSON obtenido: {menu_json}")
 
-    # Verificar si hay un mensaje de error en el JSON del menú
     if isinstance(menu_json, dict) and "message" in menu_json:
         flash(menu_json["message"], "error")
-        return redirect(url_for('dev'))
+        # Redirigir al login si hay un error en el menú
+        return redirect(url_for('index'))
 
-    # Construir el menú para renderizarlo en la plantilla
     menu = construir_menu(menu_json)
     logger.info(f"Menú construido: {menu}")
 
-    # Llamar a la función para obtener la información del usuario
     user_data = obtener_user_menu(ID_CLIENTE, id_usuario)
     logger.info(f"User Data obtenido: {user_data}")
 
-    # Verificar si la información del usuario es válida
     if not user_data:
-        logger.error("Error al obtener la información del usuario.")
         flash("Error al obtener la información del usuario.", "error")
-        return redirect(url_for('dev'))
+        # Redirigir al login si no se puede obtener información del usuario
+        return redirect(url_for('index'))
 
-    # Obtener módulos del usuario desde la respuesta del JSON
     load_module = [mod['desc_modulo'] for mod in user_data.get('modulos', [])]
     logger.info(f"Módulos obtenidos: {load_module}")
 
-    # Renderizar la plantilla del menú con los datos obtenidos
     return render_template('menu.html',
                            nom_usr=user_data['nom_usr'],
                            raz_social=user_data['raz_social'],
@@ -214,37 +191,25 @@ def menu():
 def get_user_menu_route():
     """Endpoint API para obtener la información del usuario."""
     if request.method == 'POST':
-        try:
-            # Obtener los datos enviados en la solicitud
-            id_cliente = request.json.get('id_cliente')
-            id_usuario = request.json.get('id_usuario', '').strip().lower()
+        id_cliente = request.json.get('id_cliente')
+        id_usuario = request.json.get('id_usuario', '').strip().lower()
 
-            # Validar que se hayan enviado los parámetros
-            if not id_cliente or not id_usuario:
-                return jsonify({"message": "Faltan parámetros: id_cliente o id_usuario"}), 400
+        if not id_cliente or not id_usuario:
+            return jsonify({"message": "Faltan parámetros: id_cliente o id_usuario"}), 400
 
-            # Llamar a la función interna para obtener la información del usuario
-            user_data = obtener_user_menu(id_cliente, id_usuario)
+        user_data = obtener_user_menu(id_cliente, id_usuario)
 
-            # Verificar si la función retornó un resultado
-            if user_data:
-                # Omitir user_data en la respuesta
-                return jsonify({"message": "Información del usuario obtenida correctamente."}), 200
-            else:
-                return jsonify({"message": "No se ha encontrado información para este usuario."}), 404
+        if user_data:
+            return jsonify({"message": "Información del usuario obtenida correctamente.", "data": user_data}), 200
+        else:
+            return jsonify({"message": "No se ha encontrado información para este usuario."}), 404
 
-        except Exception as e:
-            # logger.error("Error al obtener el menú del usuario: %s", e)  # Omitido
-            return jsonify({"message": "Error interno al procesar la solicitud."}), 500
-
-    # Si no es POST, devolver un error 405 (Método no permitido)
     return jsonify({"message": "Método no permitido"}), 405
 
 
-@ app.route('/mod/<module_name>')
+@app.route('/mod/<module_name>')
 def load_module(module_name):
     """Ruta dinámica para cargar módulos."""
-    # Validar el nombre del módulo para evitar accesos no deseados
     if not re.match("^[a-zA-Z0-9_]+$", module_name):
         abort(404)
 
@@ -261,236 +226,73 @@ def load_module(module_name):
 
 @app.route('/mod/mAdmcreusr', methods=['GET', 'POST'])
 def crear_usuario():
+    """Crea un nuevo usuario a partir de los datos del formulario."""
     id_usuario = session.get('id_usuario', '').strip().lower()
 
     if request.method == 'POST':
         # Obtener datos del formulario
-        id_clt = request.form.get('id_clt')
-        rut_usr = request.form.get('rut_usr')
-        dv_usr = request.form.get('dv_usr')
-        nomb_usr = request.form.get('nomb_usr')
-        # Asegurarse que este campo esté recibiendo datos
-        ape_pat_usr = request.form.get('ape_pat_usr')
-        # Asegurarse que este campo esté recibiendo datos
-        ape_mat_usr = request.form.get('ape_mat_usr')
-        ema_usr = request.form.get('ema_usr').lower()
-        cel_usr = request.form.get('cel_usr')
-        id_tda = request.form.get('id_tda')
-        id_prf = request.form.get('id_prf')
-        pwd = request.form.get('pwd')
+        usuario_data = {
+            "id_clt": request.form.get('id_clt'),
+            "rut_usr": request.form.get('rut_usr'),
+            "dv_usr": request.form.get('dv_usr'),
+            "nomb_usr": request.form.get('nomb_usr'),
+            "ape_pat_usr": request.form.get('ape_pat_usr'),
+            "ape_mat_usr": request.form.get('ape_mat_usr'),
+            "ema_usr": request.form.get('ema_usr'),
+            "cel_usr": request.form.get('cel_usr'),
+            "id_tda": request.form.get('id_tda'),
+            "id_prf": request.form.get('id_prf'),
+            "pwd": request.form.get('pwd')
+        }
 
-        # Imprimir los parámetros para depuración
-        print(f"Parámetros: {id_clt}, {rut_usr}, {dv_usr}, {nomb_usr}, {ape_pat_usr}, {ape_mat_usr}, {ema_usr}, {cel_usr}, {id_tda}, {id_prf}, {pwd}, {id_usuario}")
+        # Validar datos aquí
+        # ...
 
+        # Llamar a la función SQL para crear el usuario
         try:
             with get_db_connection() as conn:
                 with conn.cursor() as cur:
-                    cur.execute("SELECT public.crea_usuario(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
-                                (id_clt, rut_usr, dv_usr, nomb_usr, ape_pat_usr, ape_mat_usr,
-                                 ema_usr, cel_usr, id_tda, id_prf, pwd, id_usuario, 'user1'))
-
-                    respuesta = cur.fetchone()[0]
-                    print(f"Respuesta de la función SQL: {respuesta}")
-
-            if respuesta.startswith('OK'):
-                flash(respuesta.split(';')[1], 'success')
-                return redirect(url_for('menu'))
-            else:
-                flash(respuesta.split(';')[1], 'error')
-                return redirect(url_for('crear_usuario'))
-
+                    cur.execute("SELECT public.crea_usuario(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                                (usuario_data["id_clt"], usuario_data["rut_usr"], usuario_data["dv_usr"],
+                                 usuario_data["nomb_usr"], usuario_data["ape_pat_usr"],
+                                 usuario_data["ape_mat_usr"], usuario_data["ema_usr"],
+                                 usuario_data["cel_usr"], usuario_data["id_tda"],
+                                 usuario_data["id_prf"]))
+            flash("Usuario creado exitosamente.", "success")
+            return redirect(url_for('menu'))
         except Exception as e:
-            print(f"Error al crear el usuario: {str(e)}")
-            flash(f"Error al crear el usuario: {str(e)}", 'error')
-            return redirect(url_for('crear_usuario'))
+            logger.error("Error al crear usuario: %s", e)
+            flash("Error al crear el usuario.", "error")
+            return redirect(url_for('menu'))
 
-    return render_template('mod/mAdmcreusr.html')
-
-# @ app.route('/mod/mAdmcreusr', methods=['GET', 'POST'])
-# def crear_usuario():
-#     # Suponiendo que tienes el id_usuario disponible en la sesión o en el contexto
-#     # Obtén el id del usuario que hizo login
-#     id_usuario = session.get('id_usuario', '').strip().lower()
-
-#     if request.method == 'POST':
-#         # Obtener datos del formulario
-#         id_clt = request.form.get('id_clt')
-#         rut_usr = request.form.get('rut_usr')
-#         dv_usr = request.form.get('dv_usr')
-#         nomb_usr = request.form.get('nomb_usr')
-#         ape_pat_usr = request.form.get('ape_pat_usr')
-#         ape_mat_usr = request.form.get('ape_mat_usr')
-#         ema_usr = request.form.get('ema_usr').lower()
-#         cel_usr = request.form.get('cel_usr')
-#         id_tda = request.form.get('id_tda')
-#         id_prf = request.form.get('id_prf')
-#         pwd = request.form.get('pwd')
-#         # Obtener el nuevo campo de nombre de usuario
-#         # nombre_usuario = request.form.get('nombre_usuario')
-
-#         # Llamar a la función SQL crea_usuario
-#         try:
-#             with get_db_connection() as conn:
-#                 with conn.cursor() as cur:
-#                     # Asegúrate de que la cantidad y el orden de los parámetros coincidan con la definición de la función SQL
-#                     cur.execute("SELECT public.crea_usuario(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,  %s);",
-#                                 (id_clt, rut_usr, dv_usr, nomb_usr, ape_pat_usr, ape_mat_usr,
-#                                  ema_usr, cel_usr, id_tda, id_prf, pwd, id_usuario))  # Cambiado el orden
-
-#                     # Recuperar la respuesta
-#                     respuesta = cur.fetchone()[0]
-
-#             # Manejar la respuesta de la función SQL
-#             if respuesta.startswith('OK'):
-#                 flash(respuesta.split(';')[1], 'success')
-#                 return redirect(url_for('menu'))
-#             else:
-#                 flash(respuesta.split(';')[1], 'error')
-#                 return redirect(url_for('crear_usuario'))
-
-#         except Exception as e:
-#             flash(f"Error al crear el usuario: {str(e)}", 'error')
-#             return redirect(url_for('crear_usuario'))
-
-#     return render_template('mod/mAdmcreusr.html')
-
-# version 1
-# @ app.route('/reset_user_password', methods=['POST'])
-# def reset_user_password():
-#     # Obtener datos del formulario
-#     id_usuario = request.form['id_usuario']
-#     ID_CLIENTE = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
-#     pwd = request.form['pwd']
-#     confirm_pwd = request.form['confirm_pwd']
-
-#     # Verificar si las contraseñas coinciden
-#     if pwd != confirm_pwd:
-#         flash("Las contraseñas no coinciden.", "error")
-#         # Redirige de nuevo al formulario si hay error
-#         return redirect(url_for('mAdmrstpwd'))
-
-#     try:
-#         # Conexión a la base de datos y ejecutar la función SQL Change_password
-#         with get_db_connection() as conn:
-#             with conn.cursor() as cur:
-#                 # Ejecutar la función SQL Change_password
-#                 cur.execute("SELECT Change_password(%s, %s, %s)",
-#                             (id_usuario.lower(), ID_CLIENTE, pwd))  # Usar id_usuario y ID_CLIENTE fijo
-#                 conn.commit()  # Guardar los cambios en la base de datos
-
-#         flash("Contraseña restablecida con éxito.", "success")
-#         # Redirige a la página de inicio de sesión tras éxito
-#         return redirect(url_for('menu'))
-
-#     except Exception as e:
-#         flash(f"Error: {str(e)}", "error")
-#         # Redirige de nuevo al formulario si falla
-#         return redirect(url_for('mAdmrstpwd'))
+    return render_template('mod/mAdmcreusr.html', id_usuario=id_usuario)
 
 
-def enviar_correo(email, nueva_contrasena):
-    mensaje = f"Tu nueva contraseña temporal es: {nueva_contrasena}"
-    msg = MIMEText(mensaje)
-    msg['Subject'] = 'Restablecimiento de Contraseña'
-    msg['From'] = 'reset_pass@portal.sms-vivo.com'
-    msg['To'] = email
+@app.route('/logout')
+def logout():
+    """Cierra la sesión del usuario."""
+    session.clear()
+    flash("Has cerrado sesión exitosamente.", "info")
+    return redirect(url_for('index'))
 
+
+def enviar_correo(para, asunto, contenido):
+    """Función para enviar correos electrónicos."""
     try:
-        with smtplib.SMTP('mail.auraslt.com', 465) as server:
+        msg = MIMEText(contenido)
+        msg['Subject'] = asunto
+        msg['From'] = os.environ.get('MAIL_FROM')
+        msg['To'] = para
+
+        with smtplib.SMTP('smtp.mailtrap.io', 2525) as server:
             server.starttls()
-            # Reemplaza con tu contraseña
-            server.login('info@auraslt.com', '1nf0@23!')
-            server.sendmail('reset_pass@portal.sms-vivo.com',
-                            email, msg.as_string())
-        print("Correo enviado con éxito")
+            server.login(os.environ.get('MAIL_USERNAME'),
+                         os.environ.get('MAIL_PASSWORD'))
+            server.send_message(msg)
+
+        logger.info("Correo enviado a %s", para)
     except Exception as e:
-        print(f"Error al enviar correo: {e}")
-
-
-@ app.route('/restpass', methods=['POST'])
-def restpass():
-    # id_usuario = session.get('id_usuario')
-    id_usuario = request.form.get('id_usuario', '').strip().lower()
-    ID_CLIENTE = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
-    email_usr = request.form['email_usr']
-
-    print(id_usuario, ID_CLIENTE, email_usr)
-    try:
-        # Llama a la función SQL para restablecer la contraseña
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT restablecer_contraseña(%s, %s, %s)",
-                            (id_usuario, ID_CLIENTE, email_usr))
-                # Después de la ejecución, generamos una nueva contraseña para el correo
-                # Genera una nueva contraseña si es necesario
-                nueva_contrasena = "Aquí puedes generar o recuperar la nueva contraseña"
-
-        # Envía el correo electrónico con la nueva contraseña
-        enviar_correo(email_usr, nueva_contrasena)
-        flash("Se ha enviado un correo con la nueva contraseña.")
-        # Redirige a la página de inicio de sesión o donde desees
-        return redirect(url_for('login'))
-    except Exception as e:
-        flash(str(e))  # Muestra el error al usuario
-        # Redirige a la página de restablecimiento
-        return redirect(url_for('restpass'))
-
-# no esta retornado nada al formulario html! aquí
-
-
-@app.route('/get_users', methods=['GET'])
-def get_users():
-    ID_CLIENTE = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
-    try:
-        # Conexión a la base de datos y ejecución de la función SQL get_users
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT get_users(%s)", (ID_CLIENTE))
-                users = cur.fetchall()
-
-        # Formatear los resultados en un JSON
-        user_list = [
-            {
-                'id_usr': user[0],
-                'raz_social': user[1],
-                'nom_usr': user[2],
-                'dsc': user[3],
-                'pwd': user[4]
-            }
-            for user in users
-        ]
-        return jsonify(user_list)
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-# Ruta para procesar el cambio de contraseña
-@app.route('/reset_user_password', methods=['POST'])
-def reset_user_password():
-    id_usuario = request.form['id_usuario']
-    # Ajusta este valor según lo necesario
-    ID_CLIENTE = session.get('ID_CLIENTE', 'ID_CLIENTE_DEFAULT')
-    pwd = request.form['pwd']
-    confirm_pwd = request.form['confirm_pwd']
-
-    if pwd != confirm_pwd:
-        return jsonify({"status": "error", "message": "Las contraseñas no coinciden."})
-
-    try:
-        # Llamada a la función SQL para cambiar la contraseña (Change_password)
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT Change_password(%s, %s, %s)",
-                            (id_usuario.lower(), ID_CLIENTE, pwd))
-                conn.commit()
-
-        return jsonify({"status": "OK", "message": "Contraseña restablecida con éxito."})
-
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return jsonify({"status": "error", "message": "Error al restablecer la contraseña."})
-
+        logger.error("Error al enviar el correo: %s", e)
 
 # Rutas HTML de Modulos
 
