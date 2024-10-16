@@ -49,16 +49,11 @@ body {
 }
 
 /* Logo */
-/*.logotwo {
+.logotwo {
     width: 120px;
     height: auto;
     margin-right: 10px;
-}*/
-.logotwo {
-    max-width: 100%;
-    height: auto;
 }
-
 
 /* Menú lateral */
 .navbar {
