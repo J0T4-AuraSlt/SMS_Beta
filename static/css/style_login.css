@@ -1,12 +1,46 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
     font-family: 'Arial', sans-serif;
+    /* Animación de fondo */
     background: linear-gradient(135deg, #d0f0fd, #74A8ED);
+    animation: gradientShift 100s ease infinite;
+    /* Aumentar la duración para un cambio más gradual */
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     margin: 0;
     flex-direction: column;
+    position: relative;
+}
+
+/* Nueva animación para el fondo */
+@keyframes gradientShift {
+    0% {
+        background: linear-gradient(135deg, #d0f0fd, #74A8ED);
+    }
+
+    25% {
+        background: linear-gradient(180deg, #d0f0fd, #74A8ED);
+        /* Cambio más sutil */
+    }
+
+    50% {
+        background: linear-gradient(225deg, #d0f0fd, #74A8ED);
+        /* Cambio más sutil */
+    }
+
+    75% {
+        background: linear-gradient(270deg, #d0f0fd, #74A8ED);
+        /* Cambio más sutil */
+    }
+
+    100% {
+        background: linear-gradient(135deg, #d0f0fd, #74A8ED);
+    }
 }
 
 .header {
@@ -14,11 +48,17 @@ body {
     margin-bottom: 20px;
 }
 
+/*
 .logo {
     width: 480px;
     height: auto;
     margin-bottom: 10px;
+}*/
+.logo {
+    max-width: 100%;
+    height: auto;
 }
+
 
 .form-container {
     background-color: #d0f0fd;
@@ -121,4 +161,36 @@ button:hover {
         width: 40%;
         /* Ancho del 40% en computadoras de escritorio */
     }
+}
+
+/* Estilo para el watermark */
+.watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 100px;
+    color: rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+    pointer-events: none;
+}
+
+/* Asegúrate de que el body y html ocupen toda la altura */
+html,
+body {
+    height: 100%;
+}
+
+/* Estilo para el footer */
+footer {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    width: 100%;
+    padding: 1px 0;
+    font-weight: lighter;
+    /*background-color: rgba(255, 255, 255, 0.8);*/
+    background-color: linear-gradient(135deg, #d0f0fd, #74A8ED);
 }

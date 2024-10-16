@@ -49,11 +49,16 @@ body {
 }
 
 /* Logo */
-.logotwo {
+/*.logotwo {
     width: 120px;
     height: auto;
     margin-right: 10px;
+}*/
+.logotwo {
+    max-width: 100%;
+    height: auto;
 }
+
 
 /* Menú lateral */
 .navbar {
@@ -246,4 +251,20 @@ footer {
     /* Color de texto */
     margin-bottom: 10px;
     /* Margen inferior */
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        width: 100%;
+        position: relative;
+        /* Cambiar a relative */
+        height: auto;
+    }
+
+    .content {
+        margin-left: 0;
+        /* Quitar margen izquierdo */
+        padding: 15px;
+        /* Ajustar padding */
+    }
 }
