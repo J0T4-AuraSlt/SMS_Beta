@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creación de Usuario</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menucons.css') }}">
+</head>
+<body>
+
+<div class="modulo">
+    <h1>Creación de Usuario</h1>
+
+    <!-- Mensajes de Flash para Errores o Éxitos -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-message flash-{{ category }}">
+              {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form id="crearUsuarioForm" method="POST" action="{{ url_for('crear_usuario') }}">
+        <div class="form-group">
+            <label for="id_clt">Cliente:</label>
+            <select id="id_clt" name="id_clt" required aria-label="Cliente" onchange="actualizarTiendas()">
+                <option value="" disabled {% if request.form.id_clt == '' %}selected{% endif %}>Seleccione un Cliente</option>
+                <option value="99" {% if request.form.id_clt == '99' %}selected{% endif %}>Clte. de Pruebas</option>
+                <option value="1" {% if request.form.id_clt == '1' %}selected{% endif %}>Falabella</option>
+                <option value="2" {% if request.form.id_clt == '2' %}selected{% endif %}>La Polar</option>
+                <option value="3" {% if request.form.id_clt == '3' %}selected{% endif %}>ABCDIN</option>
+                <option value="4" {% if request.form.id_clt == '4' %}selected{% endif %}>Vivo</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="id_tda">Tienda:</label>
+            <select id="id_tda" name="id_tda" required aria-label="Tienda">
+                <option value="0" {% if request.form.id_tda == '0' %}selected{% endif %}>Dummy</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="id_prf">Perfil:</label>
+            <select id="id_prf" name="id_prf" required aria-label="Perfil">
+                <option value="" disabled {% if request.form.id_prf == '' %}selected{% endif %}>Seleccione un Perfil</option>
+                <option value="1" {% if request.form.id_prf == '1' %}selected{% endif %}>Jefe de Tienda</option>
+                <option value="2" {% if request.form.id_prf == '2' %}selected{% endif %}>Gerente de Tienda</option>
+                <option value="3" {% if request.form.id_prf == '3' %}selected{% endif %}>Supervisor</option>
+                <option value="4" {% if request.form.id_prf == '4' %}selected{% endif %}>Vendedor</option>
+                <option value="5" {% if request.form.id_prf == '5' %}selected{% endif %}>Cajero</option>
+                <option value="6" {% if request.form.id_prf == '6' %}selected{% endif %}>Administrador</option>
+                <option value="7" {% if request.form.id_prf == '7' %}selected{% endif %}>Promotor</option>
+                <option value="0" {% if request.form.id_prf == '0' %}selected{% endif %}>Super Usuario</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="rut">RUT:</label>
+            <input type="text" id="rut" name="rut" required aria-label="RUT" placeholder="Ej: 12345678-K" value="{{ request.form.rut }}">
+        </div>
+
+        <div class="form-group">
+            <label for="nomb_usr">Nombres:</label>
+            <input type="text" id="nomb_usr" name="nomb_usr" required aria-label="Nombre" value="{{ request.form.nomb_usr }}">
+        </div>
+
+        <div class="form-group">
+            <label for="apellidos">Apellidos:</label>
+            <input type="text" id="apellidos" name="apellidos" required aria-label="Apellidos" placeholder="Ej: Pérez González" value="{{ request.form.apellidos }}">
+        </div>
+
+        <div class="form-group">
+            <label for="ema_usr">Email:</label>
+            <input type="email" id="ema_usr" name="ema_usr" required aria-label="Email" value="{{ request.form.ema_usr }}">
+        </div>
+
+        <div class="form-group">
+            <label for="cel_usr">Teléfono (celular):</label>
+            <input type="text" id="cel_usr" name="cel_usr" required aria-label="Celular" value="{{ request.form.cel_usr }}">
+        </div>
+
+        <div class="form-group">
+            <label for="pwd">Contraseña:</label>
+            <input type="password" id="pwd" name="pwd" required aria-label="Contraseña">
+        </div>
+
+        <div class="form-group">
+            <label for="imagen">Imagen:</label>
+            <input type="file" id="imagen" name="imagen" aria-label="Imagen">
+        </div>
+
+        <div class="form-actions">
+            <button id="submitBtn" type="submit">Crear Usuario</button>
+            <button type="button" class="cancel" onclick="window.location.href='{{ url_for('menu') }}'">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('crearUsuarioForm').addEventListener('submit', async function(event) {
+        event.preventDefault(); // Prevenir el envío del formulario por defecto
+        
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true; // Deshabilitar el botón para evitar múltiples envíos
+        submitBtn.textContent = 'Creando...'; // Cambiar el texto para indicar que está en progreso
+
+        // Validar y separar el RUT y DV
+        const rutCompleto = document.getElementById('rut').value.trim();
+        const rutParts = rutCompleto.split('-');
+        const rut = rutParts[0] || '';
+        const dv = rutParts[1] || '';
+
+        if (!rut || !dv || !/^[0-9]+$/.test(rut) || !/^[0-9kK]$/.test(dv)) {
+            alert('Por favor, ingrese un RUT válido.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Crear Usuario'; // Restaurar texto
+            return;
+        }
+
+        document.getElementById('rut_usr').value = rut;
+        document.getElementById('dv_usr').value = dv.toUpperCase();
+
+        // Validar y separar los apellidos
+        const apellidos = document.getElementById('apellidos').value.trim();
+        const apellidoParts = apellidos.split(' ');
+        const apellidoPaterno = apellidoParts[0] || '';
+        const apellidoMaterno = apellidoParts.slice(1).join(' ') || '';
+
+        if (!apellidoPaterno || !apellidoMaterno) {
+            alert('Por favor, ingrese ambos apellidos.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Crear Usuario'; // Restaurar texto
+            return;
+        }
+
+        document.getElementById('ape_pat_usr').value = apellidoPaterno;
+        document.getElementById('ape_mat_usr').value = apellidoMaterno;
+
+        // Enviar el formulario con fetch
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch('{{ url_for("crear_usuario") }}', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.text();
+            document.querySelector('.modulo').innerHTML = data; // Mostrar la respuesta dentro del módulo
+        } catch (error) {
+            console.error('Error al enviar el formulario:', error);
+            alert('Hubo un error al crear el usuario.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Crear Usuario'; // Restaurar el botón
+        }
+    });
+
+    function actualizarTiendas() {
+        const idClt = document.getElementById('id_clt').value;
+        const idTdaSelect = document.getElementById('id_tda');
+        idTdaSelect.innerHTML = ''; // Limpiar opciones actuales
+
+        let opcionesTienda = [];
+
+        if (idClt === '1') {
+            opcionesTienda = [
+                { id: 1, nombre: 'Ahumada' },
+                { id: 2, nombre: 'Costanera Center' },
+                { id: 3, nombre: 'Parque Arauco' }
+            ];
+        } else if (idClt === '4') {
+            opcionesTienda = [
+                { id: 1, nombre: 'Parque Arauco' },
+                { id: 2, nombre: 'Costanera Center' }
+            ];
+        } else if (idClt === '2') {
+            opcionesTienda = [
+                { id: 4, nombre: 'Ahumada' }
+            ];
+        }
+
+        const dummyOption = document.createElement('option');
+        dummyOption.value = '0';
+        dummyOption.textContent = 'Dummy';
+        idTdaSelect.appendChild(dummyOption);
+
+        opcionesTienda.forEach(tienda => {
+            const option = document.createElement('option');
+            option.value = tienda.id;
+            option.textContent = tienda.nombre;
+            idTdaSelect.appendChild(option);
+        });
+
+        if ("{{ request.form.id_tda }}" !== "") {
+            idTdaSelect.value = "{{ request.form.id_tda }}";
+        }
+    }
+</script>
+
+</body>
+</html>

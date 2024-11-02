@@ -1,0 +1,142 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creación de Usuario</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menucons.css') }}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+
+<div class="modulo">
+    <h1>Creación de Usuario</h1>
+
+    <form id="crearUsuarioForm" method="POST" action="{{ url_for('crear_usuario') }}" onsubmit="prepararDatos();">
+        <div class="form-group">
+            <label for="id_clt">Cliente:</label>
+            <select id="id_clt" name="id_clt" required aria-label="Cliente">
+                <option value="" disabled {% if request.form.id_clt == '' %}selected{% endif %}>Seleccione un Cliente</option>
+                <option value="99" {% if request.form.id_clt == '99' %}selected{% endif %}>Clte. de Pruebas</option>
+                <option value="1" {% if request.form.id_clt == '1' %}selected{% endif %}>Falabella</option>
+                <option value="2" {% if request.form.id_clt == '2' %}selected{% endif %}>La Polar</option>
+                <option value="3" {% if request.form.id_clt == '3' %}selected{% endif %}>ABCDIN</option>
+                <option value="4" {% if request.form.id_clt == '4' %}selected{% endif %}>Vivo</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="id_tda">Tienda:</label>
+            <select id="id_tda" name="id_tda" required aria-label="Tienda">
+                <option value="0">Dummy</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="id_prf">Perfil:</label>
+            <select id="id_prf" name="id_prf" required aria-label="Perfil">
+                <option value="" disabled {% if request.form.id_prf == '' %}selected{% endif %}>Seleccione un Perfil</option>
+                <option value="1" {% if request.form.id_prf == '1' %}selected{% endif %}>Administrador</option>
+                <option value="2" {% if request.form.id_prf == '2' %}selected{% endif %}>Gerente de Tienda</option>
+                <option value="3" {% if request.form.id_prf == '3' %}selected{% endif %}>Operador de Inventario</option>
+                <option value="4" {% if request.form.id_prf == '4' %}selected{% endif %}>Vendedor</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="nomb_usr">Nombres:</label>
+            <input type="text" id="nomb_usr" name="nomb_usr" value="{{ request.form.nomb_usr }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="rut">RUT:</label>
+            <input type="text" id="rut" name="rut" value="{{ request.form.rut }}" required placeholder="16547097-K">
+            <input type="hidden" id="rut_usr" name="rut_usr">
+            <input type="hidden" id="dv_usr" name="dv_usr">
+        </div>
+
+        <div class="form-group">
+            <label for="apellidos">Apellidos:</label>
+            <input type="text" id="apellidos" name="apellidos" value="{{ request.form.apellidos }}" required>
+            <input type="hidden" id="ape_pat_usr" name="ape_pat_usr">
+            <input type="hidden" id="ape_mat_usr" name="ape_mat_usr">
+        </div>
+
+        <div class="form-group">
+            <label for="ema_usr">Email:</label>
+            <input type="email" id="ema_usr" name="ema_usr" value="{{ request.form.ema_usr }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="cel_usr">Teléfono (celular):</label>
+            <input type="tel" id="cel_usr" name="cel_usr" value="{{ request.form.cel_usr }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="pwd">Contraseña:</label>
+            <input type="password" id="pwd" name="pwd" required>
+        </div>
+
+        <div class="form-group">
+            <label for="user_image">Imagen:</label>
+            <input type="file" id="user_image" name="user_image" accept="image/*">
+        </div>
+
+        <div class="form-group">
+            <button type="button" onclick="prepararDatos(); confirmarEnvio();" id="submitBtn">Crear Usuario</button>
+            <button type="button" onclick="window.history.back();">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="confirmacionModal" tabindex="-1" role="dialog" aria-labelledby="confirmacionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmacionModalLabel">Confirmación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmacionMensaje">¿Estás seguro de que deseas crear el usuario con los datos ingresados?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="enviarFormulario()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Función para preparar los datos antes de enviar el formulario
+    function prepararDatos() {
+        const rutCompleto = document.getElementById('rut').value;
+        const [rut, dv] = rutCompleto.split('-');
+        document.getElementById('rut_usr').value = rut || '';
+        document.getElementById('dv_usr').value = dv || '';
+
+        const apellidos = document.getElementById('apellidos').value.split(' ');
+        document.getElementById('ape_pat_usr').value = apellidos[0] || '';
+        document.getElementById('ape_mat_usr').value = apellidos[1] || '';
+    }
+
+    // Función para mostrar el modal de confirmación
+    function confirmarEnvio() {
+        $('#confirmacionModal').modal('show');
+    }
+
+    // Función para enviar el formulario tras la confirmación
+    function enviarFormulario() {
+        $('#confirmacionModal').modal('hide');
+        document.getElementById('crearUsuarioForm').submit();
+    }
+</script>
+
+</body>
+</html>

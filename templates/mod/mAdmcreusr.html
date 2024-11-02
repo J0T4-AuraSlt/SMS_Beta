@@ -4,29 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Creación de Usuario</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_submenu.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menucons.css') }}">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
 
 <div class="modulo">
     <h1>Creación de Usuario</h1>
 
-    <!-- Mensajes de Flash para Errores o Éxitos -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="flash-message flash-{{ category }}">
-              {{ message }}
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-    <form id="crearUsuarioForm" method="POST" action="{{ url_for('crear_usuario') }}">
+    <form id="crearUsuarioForm" method="POST" action="{{ url_for('crear_usuario') }}" onsubmit="prepararDatos();">
         <div class="form-group">
             <label for="id_clt">Cliente:</label>
-            <select id="id_clt" name="id_clt" required aria-label="Cliente" onchange="actualizarTiendas()">
+            <select id="id_clt" name="id_clt" required aria-label="Cliente">
                 <option value="" disabled {% if request.form.id_clt == '' %}selected{% endif %}>Seleccione un Cliente</option>
                 <option value="99" {% if request.form.id_clt == '99' %}selected{% endif %}>Clte. de Pruebas</option>
                 <option value="1" {% if request.form.id_clt == '1' %}selected{% endif %}>Falabella</option>
@@ -39,8 +29,7 @@
         <div class="form-group">
             <label for="id_tda">Tienda:</label>
             <select id="id_tda" name="id_tda" required aria-label="Tienda">
-                <option value="0" {% if request.form.id_tda == '0' %}selected{% endif %}>Dummy</option>
-                <!-- Las opciones se actualizarán dinámicamente -->
+                <option value="0">Dummy</option>
             </select>
         </div>
 
@@ -61,11 +50,7 @@
 
         <div class="form-group">
             <label for="rut">RUT:</label>
-            <input type="text" id="rut" name="rut_usr" required aria-label="RUT" placeholder="Ej: 16547097" value="{{ request.form.rut_usr }}">
-        </div>
-        <div class="form-group">
-            <label for="dv">Digito V.:</label>
-            <input type="text" id="dv" name="dv_usr" required aria-label="DV" placeholder="Ej: K" maxlength="1" value="{{ request.form.dv_usr }}">
+            <input type="text" id="rut" name="rut" required aria-label="RUT" placeholder="Ej: 12345678-K" value="{{ request.form.rut }}">
         </div>
 
         <div class="form-group">
@@ -84,7 +69,7 @@
         </div>
 
         <div class="form-group">
-            <label for="cel_usr">Celular:</label>
+            <label for="cel_usr">Teléfono (celular):</label>
             <input type="text" id="cel_usr" name="cel_usr" required aria-label="Celular" value="{{ request.form.cel_usr }}">
         </div>
 
@@ -93,105 +78,56 @@
             <input type="password" id="pwd" name="pwd" required aria-label="Contraseña">
         </div>
 
+        <div class="form-group">
+            <label for="imagen">Imagen:</label>
+            <input type="file" id="imagen" name="imagen" aria-label="Imagen">
+        </div>
+
+        <!-- Campos Ocultos para RUT y Apellidos Separados -->
+        <input type="hidden" id="rut_usr" name="rut_usr">
+        <input type="hidden" id="dv_usr" name="dv_usr">
+        <input type="hidden" id="ape_pat_usr" name="ape_pat_usr">
+        <input type="hidden" id="ape_mat_usr" name="ape_mat_usr">
+
         <div class="form-actions">
-            <button type="submit">Crear Usuario</button>
+            <button id="submitBtn" type="submit" onclick="prepararDatos()">Crear Usuario</button>
             <button type="button" class="cancel" onclick="window.location.href='{{ url_for('menu') }}'">Cancelar</button>
         </div>
     </form>
 </div>
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="mensajeModal" tabindex="-1" aria-labelledby="mensajeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mensajeModalLabel">Resultado de la Operación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="mensajeModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
-    function actualizarTiendas() {
-        const idClt = document.getElementById('id_clt').value; // Obtener el cliente seleccionado
-        const idTdaSelect = document.getElementById('id_tda'); // Obtener el select de tiendas
+    // Función para preparar los datos antes de enviar el formulario
+    function prepararDatos() {
+        const rutCompleto = document.getElementById('rut').value;
+        const [rut, dv] = rutCompleto.split('-');
+        document.getElementById('rut_usr').value = rut || '';
+        document.getElementById('dv_usr').value = dv || '';
 
-        // Limpiar las opciones actuales
-        idTdaSelect.innerHTML = '';
-
-        let opcionesTienda = [];
-
-        // Determinar las tiendas según el cliente seleccionado
-        if (idClt === '1') { // Falabella
-            opcionesTienda = [
-                { id: 1, nombre: 'Ahumada' },
-                { id: 2, nombre: 'Costanera Center' },
-                { id: 3, nombre: 'Parque Arauco' },
-            ];
-        } else if (idClt === '4') { // Vivo
-            opcionesTienda = [
-                { id: 1, nombre: 'Parque Arauco' },
-                { id: 2, nombre: 'Costanera Center' },
-            ];
-        } else if (idClt === '2') { // La Polar
-            opcionesTienda = [
-                { id: 4, nombre: 'Ahumada' },
-            ];
-        }
-
-        // Agregar la opción Dummy por defecto
-        const dummyOption = document.createElement('option');
-        dummyOption.value = 0; // Asigna el id de Dummy
-        dummyOption.textContent = 'Dummy'; // Cambia el texto si es necesario
-        idTdaSelect.appendChild(dummyOption);
-
-        // Agregar opciones a la lista desplegable
-        opcionesTienda.forEach(tienda => {
-            const option = document.createElement('option');
-            option.value = tienda.id; // Asignar el id de la tienda
-            option.textContent = tienda.nombre; // Asignar el nombre de la tienda
-            idTdaSelect.appendChild(option);
-        });
-
-        // Preseleccionar la tienda si hay una seleccionada en el formulario
-        if ("{{ request.form.id_tda }}" !== "") {
-            idTdaSelect.value = "{{ request.form.id_tda }}"; // Preselecciona la tienda en el formulario
-        }
+        const apellidos = document.getElementById('apellidos').value.split(' ');
+        document.getElementById('ape_pat_usr').value = apellidos[0] || '';
+        document.getElementById('ape_mat_usr').value = apellidos[1] || '';
     }
-
-    document.getElementById('crearUsuarioForm').addEventListener('submit', function(event) {
-        const rut = document.getElementById('rut').value.trim();
-        const dv = document.getElementById('dv').value.trim();
-
-        // Validar que el RUT tenga el formato correcto
-        if (rut === '' || dv === '') {
-            alert('Por favor, complete el RUT y el DV.');
-            event.preventDefault(); // Evitar el envío del formulario
-            return;
-        }
-
-       document.getElementById('crearUsuarioForm').addEventListener('submit', function(event) {
-        const apellidos = document.getElementById('apellidos').value.trim();
-        const apellidoParts = apellidos.split(' ');
-
-        // Asumimos que si hay dos apellidos, están separados por un espacio
-        const apellidoPaterno = apellidoParts[0] || '';
-        const apellidoMaterno = apellidoParts.length > 1 ? apellidoParts[1] : '';
-
-        document.getElementById('crearUsuarioForm').addEventListener('submit', function(event) {
-            const apellidos = document.getElementById('apellidos').value.trim();
-            const apellidoParts = apellidos.split(' ');
-    
-            // Asumimos que si hay dos apellidos, están separados por un espacio
-            const apellidoPaterno = apellidoParts[0] || '';
-            const apellidoMaterno = apellidoParts.length > 1 ? apellidoParts[1] : '';
-    
-            // Asignar los apellidos separados a los campos ocultos
-            document.getElementById('ape_pat_usr').value = apellidoPaterno;
-            document.getElementById('ape_mat_usr').value = apellidoMaterno;
-    
-            console.log(`Apellidos separados: ${apellidoPaterno}, ${apellidoMaterno}`);
-    
-            // Validaciones adicionales si es necesario
-            if (!apellidoPaterno || !apellidoMaterno) {
-                alert('Por favor, ingrese ambos apellidos.');
-                event.preventDefault(); // Evitar el envío del formulario si falta algún apellido
-                return;
-    });
 </script>
 
-<!-- Campos ocultos para los apellidos -->
-<input type="hidden" id="ape_pat_usr" name="apellido_paterno" value="">
-<input type="hidden" id="ape_mat_usr" name="apellido_materno" value="">
+<script src="{{ url_for('static', filename='js/menu.js') }}"></script>
 
 </body>
 </html>

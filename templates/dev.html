@@ -1,71 +1,82 @@
 <!DOCTYPE html>
 <html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Módulos en Construcción</title>
-    <link rel="icon" href="{{ url_for('static', filename='imagen/favicon-vivo.png') }}" type="image/x-icon"> <!-- Agregar favicon -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style_login.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+
     <style>
-        /* Estilos para la página en construcción */
-        body2 {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f0f0f0;
-            padding: 50px;
-        }
+      /* Estilos para la página en construcción */
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: #f0f0f0;
+        padding: 50px;
+      }
 
-        .construction {
-            margin-top: 50px;
-        }
+      .construction {
+        margin-top: 50px;
+      }
 
-        .construction img {
-            width: 200px;
-        }
+      .construction img {
+        width: 200px;
+      }
 
-        h1 {
-            color: #FF6347;
-            font-size: 3em;
-        }
+      h1 {
+        color: #ff6347;
+        font-size: 3em;
+      }
 
-        p {
-            font-size: 1.5em;
-            color: #333;
-        }
+      p {
+        font-size: 1.5em;
+        color: #333;
+      }
+      p1 {
+        font-size: 50px;
+        color: #333;
+      }
 
-
-        .working {
-            font-size: 4em;
-            color: #FF4500;
-        }
-
-
+      .working {
+        font-size: 4em;
+        color: #ff4500;
+      }
     </style>
-</head>
+  </head>
 
-<body2>
+  <body>
+    <!-- Botón Home con ícono de Font Awesome -->
+    <div class="volver-home">
+      <p>
+        <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a>
+      </p>
+    </div>
+
     <div class="info-bar">
-        <img src="{{ url_for('static', filename='imagen/logo-clt.png>') }}" 
-             alt="Logo de la Empresa" class="logotwo">
-        <span>Cliente: {{ ID_CLIENTE }}</span>
-        <span>Usuario: {{ id_usuario.upper() }}</span>
-        <span>Fecha y Hora: {{ fecha_hora }}</span>
-        <a href="{{ url_for('menu') }}" class="btn-back">Volver al Menú</a>
-        <a href="{{ url_for('index') }}" class="btn-back">Cerrar sesión</a>
+      <p>{{ fecha_hora }}</p>
     </div>
 
     <div class="construction">
-        <h1>¡Oops! 🤭</h1>
-        <p>Estimado {{ id_usuario.upper() }}, Este módulo está en construcción 🚧</p>
-        <img src="{{ url_for('static', filename='imagen/logo-clt.png') }}" 
-             alt="Imagen de construcción">
-        <p class="working">Volvemos pronto... o no 🤔, depende del café ☕</p>
+      <h1>¡Oops!</h1>
+      <p1> Estimado, Este módulo está en construcción 🚧 </p1>
+    </div>
+    <div>
+      <img
+        src="{{ url_for('static', filename='imagen/logo-clt.png') }}"
+        alt="Imagen de construcción"
+      />
     </div>
 
     <footer>
-        <p>© 2024 Todos los derechos reservados. Mientras tanto, ¡disfruta de un descanso! 🛠️</p>
+      <p>&copy; 2024 Todos los derechos reservados.</p>
     </footer>
-</body2>
-
+  </body>
 </html>

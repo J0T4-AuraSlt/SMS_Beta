@@ -1,122 +1,118 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuración de Ventas Semanales</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}"> <!-- Vinculación al archivo CSS -->
-
-</head>
-<body>
-
-<div class="container">
-    <h1>Configuración de Ventas Semanales</h1>
-
-    <form id="configForm">
-        <!-- Nombre del Archivo -->
-        <label for="archivo">Nombre del Archivo:</label>
-        <input type="text" id="archivo" name="archivo" placeholder="Ingrese el nombre del archivo" required>
-
-        <!-- Formato -->
-        <label for="formato">Formato del Archivo:</label>
-        <select id="formato" name="formato" required>
-            <option value="excel">Excel</option>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Configuración de Procesamiento de Ventas Semanales</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style_menucons.css') }}"
+    />
+    <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+  </head>
+  <body>
+    <div class="form-container">
+      <h2>Configuración de Procesamiento de Ventas Semanales</h2>
+      <form id="config-form">
+        <!--   
+        <div class="form-group">
+          <label for="carpeta">Nombre Carpeta (Cliente):</label>
+          <input
+            type="text"
+            id="carpeta"
+            placeholder="Ejemplo: ArchivoDeVentas"
+            readonly
+          />
+        </div>
+        -->
+        <div class="form-group">
+          <label for="archivo">Nombre del archivo:</label>
+          <input
+            type="text"
+            id="archivo"
+            placeholder="Ingrese nombre del archivo"
+          />
+        </div>
+        <div class="form-group">
+          <label for="formato">Formato del archivo:</label>
+          <select id="formato">
+            <option value="fmt">Selec. Formato</option>
             <option value="csv">CSV</option>
             <option value="txt">TXT</option>
-        </select>
-
-        <!-- Separación de caracteres -->
-        <label for="separacion">Separación de Caracteres:</label>
-        <input type="text" id="separacion" name="separacion" placeholder="Ingrese el separador de caracteres" required>
-
-        <!-- Campos que se deben leer -->
-        <div class="dynamic-fields" id="dynamicFields">
-            <label>Campos que se deben leer desde el archivo:</label>
-            <div class="field">
-                <div class="field-group">
-                    <input type="text" placeholder="Nombre del campo" name="campo[]" required>
-                </div>
-                <div class="field-group">
-                    <select name="tipoDato[]" required>
-                        <option value="text">Texto</option>
-                        <option value="integer">Entero</option>
-                        <option value="decimal">Decimal</option>
-                    </select>
-                </div>
-                <div class="field-group">
-                    <select name="obligatorio[]" required>
-                        <option value="si">Sí</option>
-                        <option value="no">No</option>
-                    </select>
-                </div>
-            </div>
+            <option value="xlsx">XLSX</option>
+          </select>
+        </div>
+        <div class="form-group" id="separador-container" style="display: none">
+          <label for="separador">Separador de campos:</label>
+          <select id="separador">
+            <option value=",">Coma (,)</option>
+            <option value=";">Punto y coma (;)</option>
+            <option value=".">Punto (.)</option>
+            <option value="|">Barra Vertical (|)</option>
+            <option value=":">Dos puntos (:)</option>
+            <option value="-">Guion (-)</option>
+            <option value="\t">Tabulación</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Campos del archivo:</label>
+          <table id="campos-table">
+            <thead>
+              <tr>
+                <th>Nombre del Campo</th>
+                <th>Tipo de Dato</th>
+                <th>Obligatorio</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="campos-body">
+              <tr>
+                <td>
+                  <input type="text" placeholder="Ingrese nombre del campo" />
+                </td>
+                <td>
+                  <select>
+                    <option value="texto">Texto</option>
+                    <option value="numerico">Numérico</option>
+                    <option value="decimal">Decimal</option>
+                    <option value="fecha">Fecha</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </td>
+                <td><input type="checkbox" /></td>
+                <td>
+                  <button type="button" class="delete-row">Eliminar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <button type="button" id="agregar-campo">Agregar Campo</button>
         </div>
 
-        <button type="button" class="add-field" onclick="agregarCampo()">Agregar Campo</button>
+        <div class="form-group">
+          <label>Frecuencia de Ejecución:</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" value="lunes" /> Lun</label>
+            <label><input type="checkbox" value="martes" /> Mar</label>
+            <label><input type="checkbox" value="miercoles" /> Mie</label>
+            <label><input type="checkbox" value="jueves" /> Jue</label>
+            <label><input type="checkbox" value="viernes" /> Vie</label>
+            <label><input type="checkbox" value="sabado" /> Sab</label>
+            <label><input type="checkbox" value="domingo" /> Dom</label>
+          </div>
+        </div>
 
-        <!-- Frecuencia de Ejecución -->
-        <label for="frecuencia">Frecuencia de Ejecución:</label>
-        <input type="text" id="frecuencia" name="frecuencia" placeholder="Ingrese la frecuencia de ejecución" required>
+        <div class="form-group">
+          <label for="fecha-inicio">F. Inicio:</label>
+          <input type="datetime-local" id="fecha-inicio" />
+          <label for="fecha-fin">F. Fin:</label>
+          <input type="datetime-local" id="fecha-fin" />
+        </div>
 
-        <!-- Fecha de Próxima Ejecución -->
-        <label for="fecha">Fecha de Próxima Ejecución:</label>
-        <input type="date" id="fecha" name="fecha" required>
-
-        <!-- Botones de Guardar y Cancelar -->
-        <button type="submit">Guardar Configuración</button>
-        <button type="button" class="delete-field" onclick="limpiarFormulario()">Cancelar</button>
-    </form>
-</div>
-
-<script>
-    function agregarCampo() {
-        // Crear nuevo grupo de campos
-        const campoHTML = `
-            <div class="field">
-                <div class="field-group">
-                    <input type="text" placeholder="Nombre del campo" name="campo[]" required>
-                </div>
-                <div class="field-group">
-                    <select name="tipoDato[]" required>
-                        <option value="text">Texto</option>
-                        <option value="integer">Entero</option>
-                        <option value="decimal">Decimal</option>
-                    </select>
-                </div>
-                <div class="field-group">
-                    <select name="obligatorio[]" required>
-                        <option value="si">Sí</option>
-                        <option value="no">No</option>
-                    </select>
-                </div>
-            </div>`;
-        document.getElementById('dynamicFields').insertAdjacentHTML('beforeend', campoHTML);
-    }
-
-    function limpiarFormulario() {
-        document.getElementById("configForm").reset();
-        document.getElementById('dynamicFields').innerHTML = `
-            <label>Campos que se deben leer desde el archivo:</label>
-            <div class="field">
-                <div class="field-group">
-                    <input type="text" placeholder="Nombre del campo" name="campo[]" required>
-                </div>
-                <div class="field-group">
-                    <select name="tipoDato[]" required>
-                        <option value="text">Texto</option>
-                        <option value="integer">Entero</option>
-                        <option value="decimal">Decimal</option>
-                    </select>
-                </div>
-                <div class="field-group">
-                    <select name="obligatorio[]" required>
-                        <option value="si">Sí</option>
-                        <option value="no">No</option>
-                    </select>
-                </div>
-            </div>`;
-    }
-</script>
-
-</body>
+        <button type="button" id="guardar-config">Guardar Configuración</button>
+        <button type="button" id="ejecutar">Ejecutar</button>
+        <button type="button" id="cancelar">Cancelar</button>
+      </form>
+    </div>
+  </body>
 </html>

@@ -1,36 +1,285 @@
 <!DOCTYPE html>
 <html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tendencia de Ventas</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style_menucons.css') }}"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reportes, Informes de Ventas </title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
-</head>
+      .container {
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+      }
 
-<body>
-    <div class="info-bar">
-        <img src="{{ url_for('static', filename='imagen/logo-clt.png') }}" alt="Logo de la Empresa" class="logotwo">
-        <span>Cliente: {{ ID_CLIENTE }}</span>
-        <span>Usuario: {{ id_usuario.upper() }}</span>
-        <span>Fecha y Hora: {{ fecha_hora }}</span>
-        <a href="{{ url_for('menu') }}">Volver al Menú</a>
-        <a href="{{ url_for('index') }}">Cerrar sesión</a>
-    </div>
+      .form-section,
+      .results-section,
+      .charts-section {
+        margin-bottom: 40px;
+      }
 
-    <nav class="navbar">
-        <ul>
-        </ul>
-    </nav>
+      .form-section h2,
+      .results-section h2,
+      .charts-section h2 {
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 10px;
+      }
 
-    <div class="content">
-        <h1>Reportes, Informes de Ventas</h1>
-    </div>
+      label {
+        display: block;
+        margin-top: 15px;
+      }
 
-</body>
+      input[type="text"],
+      input[type="date"],
+      select {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+      }
 
-<footer>
-    <p>© 2024 Todos los derechos reservados.</p>
-</footer>
+      /* Centramos los botones */
+      .form-actions {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+      }
 
+      button {
+        padding: 10px 15px;
+        background-color: #2980b9;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin-right: 10px;
+      }
+
+      .cancel {
+        background-color: #e74c3c;
+      }
+
+      .results {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+
+      .results div {
+        flex: 1 1 30%;
+        background-color: #ecf0f1;
+        padding: 15px;
+        margin: 10px;
+        text-align: center;
+      }
+
+      .chart {
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      canvas {
+        margin: 0 auto;
+        display: block;
+        width: 100% !important;
+        max-width: 800px;
+        height: 400px !important;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="container">
+        <!-- Sección de formulario -->
+        <section class="form-section">
+          <h2>Tendencia de Ventas</h2>
+          <form id="sales-form">
+            <label for="product">Producto:</label>
+            <select id="product" name="product" required>
+              <option value="">Seleccione un producto</option>
+              <option value="producto1">Producto 1</option>
+              <option value="producto2">Producto 2</option>
+              <option value="producto3">Producto 3</option>
+              <option value="producto4">Producto 4</option>
+            </select>
+
+            <label for="start-date">Fecha de inicio:</label>
+            <input type="date" id="start-date" name="start-date" required />
+
+            <label for="end-date">Fecha de fin:</label>
+            <input type="date" id="end-date" name="end-date" required />
+
+            <div class="form-actions">
+              <button id="analyze-button" type="button">Analizar</button>
+              <button
+                type="button"
+                class="cancel"
+                onclick="window.location.href='{{ url_for('menu') }}'"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Sección de resultados -->
+        <section class="results-section">
+          <h2>Resultados</h2>
+          <div class="results">
+            <div>
+              <h3>Producto Seleccionado</h3>
+              <p>
+                <strong>Pico de Ventas:</strong>
+                <span id="product-peak">-</span>
+              </p>
+              <p>
+                <strong>Promedio de Ventas:</strong>
+                <span id="product-average">-</span>
+              </p>
+              <p>
+                <strong>Mínimo de Ventas:</strong>
+                <span id="product-min">-</span>
+              </p>
+            </div>
+            <div>
+              <h3>Ventas Generales</h3>
+              <p>
+                <strong>Pico de Ventas:</strong>
+                <span id="general-peak">-</span>
+              </p>
+              <p>
+                <strong>Promedio de Ventas:</strong>
+                <span id="general-average">-</span>
+              </p>
+              <p>
+                <strong>Mínimo de Ventas:</strong>
+                <span id="general-min">-</span>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sección de gráficos -->
+        <section class="charts-section">
+          <h2>Gráficos de Ventas</h2>
+          <div class="chart">
+            <canvas id="sales-chart"></canvas>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Scripts para gráficos (por ejemplo, Chart.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const productSalesData = {
+          producto1: {
+            peak: 150,
+            average: 80,
+            min: 20,
+            sales: [20, 50, 70, 100, 150, 90, 60],
+          },
+          producto2: {
+            peak: 170,
+            average: 90,
+            min: 30,
+            sales: [30, 60, 90, 120, 170, 110, 80],
+          },
+        };
+
+        const generalSalesData = {
+          peak: 200,
+          average: 120,
+          min: 30,
+          sales: [30, 60, 90, 120, 200, 150, 100],
+        };
+
+        document
+          .getElementById("analyze-button")
+          .addEventListener("click", function () {
+            const product = document.getElementById("product").value;
+            const startDate = document.getElementById("start-date").value;
+            const endDate = document.getElementById("end-date").value;
+
+            if (!product || !startDate || !endDate) {
+              alert("Por favor, complete todos los campos del formulario.");
+              return;
+            }
+
+            const productData = productSalesData[product];
+
+            document.getElementById("product-peak").innerText =
+              productData.peak;
+            document.getElementById("product-average").innerText =
+              productData.average;
+            document.getElementById("product-min").innerText = productData.min;
+
+            document.getElementById("general-peak").innerText =
+              generalSalesData.peak;
+            document.getElementById("general-average").innerText =
+              generalSalesData.average;
+            document.getElementById("general-min").innerText =
+              generalSalesData.min;
+
+            const ctx = document.getElementById("sales-chart").getContext("2d");
+
+            if (window.salesChart) {
+              window.salesChart.destroy();
+            }
+
+            window.salesChart = new Chart(ctx, {
+              type: "line",
+              data: {
+                labels: [
+                  "Semana 1",
+                  "Semana 2",
+                  "Semana 3",
+                  "Semana 4",
+                  "Semana 5",
+                  "Semana 6",
+                  "Semana 7",
+                ],
+                datasets: [
+                  {
+                    label: "Producto Seleccionado",
+                    data: productData.sales,
+                    borderColor: "rgba(52, 152, 219, 1)",
+                    backgroundColor: "rgba(52, 152, 219, 0.2)",
+                    fill: true,
+                  },
+                  {
+                    label: "Ventas Generales",
+                    data: generalSalesData.sales,
+                    borderColor: "rgba(231, 76, 60, 1)",
+                    backgroundColor: "rgba(231, 76, 60, 0.2)",
+                    fill: true,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: {
+                    position: "top",
+                  },
+                  title: {
+                    display: true,
+                    text: "Comparación de Ventas",
+                  },
+                },
+              },
+            });
+          });
+      });
+    </script>
+  </body>
 </html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tendencia de Ventas</title>
+    <style>
+      /* Estilos CSS (igual que antes) */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      header,
+      nav,
+      main {
+        padding: 20px;
+      }
+      header {
+        background-color: #2c3e50;
+        color: white;
+      }
+      nav {
+        background-color: #34495e;
+      }
+      nav a {
+        color: white;
+        margin-right: 15px;
+        text-decoration: none;
+      }
+      .container {
+        max-width: 1200px;
+        margin: auto;
+      }
+      .form-section,
+      .results-section,
+      .charts-section {
+        margin-bottom: 40px;
+      }
+      .form-section h2,
+      .results-section h2,
+      .charts-section h2 {
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 10px;
+      }
+      label {
+        display: block;
+        margin-top: 15px;
+      }
+      input[type="text"],
+      input[type="date"],
+      select {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+      }
+      button {
+        margin-top: 20px;
+        padding: 10px 15px;
+        background-color: #2980b9;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      .results {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+      .results div {
+        flex: 1 1 30%;
+        background-color: #ecf0f1;
+        padding: 15px;
+        margin: 10px;
+        text-align: center;
+      }
+      .chart {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+<header>
+    <div class="container">
+        <h1>Sistema de Ventas</h1>
+    </div>
+</header>
+
+<nav>
+    <div class="container">
+        <a href="#">Inicio</a>
+        <a href="#">Ventas</a>
+        <a href="#">Inventario</a>
+        <a href="#">Reportes</a>
+        <a href="#">Configuración</a>
+    </div>
+</nav>
+-->
+    <main>
+      <div class="container">
+        <!-- Sección de formulario -->
+        <section class="form-section">
+          <h2>Tendencia de Ventas</h2>
+          <form id="sales-form">
+            <label for="product">Producto:</label>
+            <select id="product" name="product" required>
+              <option value="">Seleccione un producto</option>
+              <option value="producto1">Producto 1</option>
+              <option value="producto2">Producto 2</option>
+              <option value="producto3">Producto 3</option>
+              <option value="producto4">Producto 4</option>
+              <!-- Puedes añadir más productos aquí -->
+            </select>
+
+            <label for="start-date">Fecha de inicio:</label>
+            <input type="date" id="start-date" name="start-date" required />
+
+            <label for="end-date">Fecha de fin:</label>
+            <input type="date" id="end-date" name="end-date" required />
+
+            <button type="submit">Analizar</button>
+          </form>
+        </section>
+
+        <!-- Sección de resultados -->
+        <section class="results-section">
+          <h2>Resultados</h2>
+          <div class="results">
+            <div>
+              <h3>Producto Seleccionado</h3>
+              <p>
+                <strong>Pico de Ventas:</strong>
+                <span id="product-peak">-</span>
+              </p>
+              <p>
+                <strong>Promedio de Ventas:</strong>
+                <span id="product-average">-</span>
+              </p>
+              <p>
+                <strong>Mínimo de Ventas:</strong>
+                <span id="product-min">-</span>
+              </p>
+            </div>
+            <div>
+              <h3>Ventas Generales</h3>
+              <p>
+                <strong>Pico de Ventas:</strong>
+                <span id="general-peak">-</span>
+              </p>
+              <p>
+                <strong>Promedio de Ventas:</strong>
+                <span id="general-average">-</span>
+              </p>
+              <p>
+                <strong>Mínimo de Ventas:</strong>
+                <span id="general-min">-</span>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sección de gráficos -->
+        <section class="charts-section">
+          <h2>Gráficos de Ventas</h2>
+          <div class="chart">
+            <canvas id="sales-chart" width="800" height="400"></canvas>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Scripts para gráficos (por ejemplo, Chart.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      // Datos de ejemplo para distintos productos
+      const productSalesData = {
+        producto1: {
+          peak: 150,
+          average: 80,
+          min: 20,
+          sales: [20, 50, 70, 100, 150, 90, 60],
+        },
+        producto2: {
+          peak: 180,
+          average: 90,
+          min: 30,
+          sales: [30, 60, 80, 110, 180, 100, 70],
+        },
+        producto3: {
+          peak: 120,
+          average: 70,
+          min: 25,
+          sales: [25, 45, 65, 85, 120, 80, 55],
+        },
+        producto4: {
+          peak: 200,
+          average: 100,
+          min: 40,
+          sales: [40, 70, 90, 130, 200, 110, 80],
+        },
+      };
+
+      // Datos de ventas generales
+      const generalSalesData = {
+        peak: 200,
+        average: 120,
+        min: 30,
+        sales: [30, 60, 90, 120, 200, 150, 100],
+      };
+
+      document
+        .getElementById("sales-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          // Obtener valores del formulario
+          const product = document.getElementById("product").value;
+          const startDate = document.getElementById("start-date").value;
+          const endDate = document.getElementById("end-date").value;
+
+          if (!product || !startDate || !endDate) {
+            alert("Por favor, complete todos los campos del formulario.");
+            return;
+          }
+
+          // En una implementación real, aquí harías una llamada al backend para obtener los datos
+          // Para este ejemplo, usaremos los datos predefinidos
+
+          // Obtener datos del producto seleccionado
+          const productData = productSalesData[product];
+
+          // Actualizar resultados del producto seleccionado
+          document.getElementById("product-peak").innerText = productData.peak;
+          document.getElementById("product-average").innerText =
+            productData.average;
+          document.getElementById("product-min").innerText = productData.min;
+
+          // Actualizar resultados de ventas generales
+          document.getElementById("general-peak").innerText =
+            generalSalesData.peak;
+          document.getElementById("general-average").innerText =
+            generalSalesData.average;
+          document.getElementById("general-min").innerText =
+            generalSalesData.min;
+
+          // Generar gráfico
+          const ctx = document.getElementById("sales-chart").getContext("2d");
+
+          // Destruir el gráfico previo si existe
+          if (window.salesChart) {
+            window.salesChart.destroy();
+          }
+
+          window.salesChart = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: [
+                "Semana 1",
+                "Semana 2",
+                "Semana 3",
+                "Semana 4",
+                "Semana 5",
+                "Semana 6",
+                "Semana 7",
+              ],
+              datasets: [
+                {
+                  label: "Producto Seleccionado",
+                  data: productData.sales,
+                  borderColor: "rgba(52, 152, 219, 1)",
+                  backgroundColor: "rgba(52, 152, 219, 0.2)",
+                  fill: true,
+                },
+                {
+                  label: "Ventas Generales",
+                  data: generalSalesData.sales,
+                  borderColor: "rgba(231, 76, 60, 1)",
+                  backgroundColor: "rgba(231, 76, 60, 0.2)",
+                  fill: true,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: "top",
+                },
+                title: {
+                  display: true,
+                  text: "Comparación de Ventas",
+                },
+              },
+            },
+          });
+        });
+    </script>
+  </body>
+</html>

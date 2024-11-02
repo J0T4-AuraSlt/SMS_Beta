@@ -1,62 +1,68 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restablecer Contraseña</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="icon" href="{{ url_for('static', filename='imagen/favicon-vivo.png') }}" type="image/x-icon"> <!-- Agregar favicon -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_login.css') }}">    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Incluye jQuery -->
 </head>
 <body>
-    <h1>Restablecer Contraseña de Usuario</h1>
+    <div class="form-container">
+        <h1>Restablecer Contraseña</h1>
 
-    <form id="reset-password-form">
-        <label for="user-select">Selecciona un usuario:</label>
-        <select id="user-select" name="user" required>
-            <option value="">-- Selecciona un usuario --</option>
-            <!-- Los usuarios se cargarán aquí mediante JavaScript -->
-        </select>
+        <form id="reset-password-form">
+            <div class="input-group">
+                <label for="email">Correo Electrónico</label>
+                <input type="email" id="email" name="email" placeholder="Ingresa tu correo" required>
+            </div>
 
-        <label for="new-password">Nueva Contraseña:</label>
-        <input type="password" id="new-password" name="new_password" required>
+            <button type="submit" class="center-button">Enviar</button>
+        </form>
 
-        <button type="submit">Restablecer Contraseña</button>
-    </form>
+        <!-- Popup que se mostrará con el mensaje -->
+        <div id="popup-message" style="display: none; padding: 20px; border: 1px solid #ccc; background-color: #f0f0f0; text-align: center; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 999;">
+            <p id="popup-text"></p>
+            <button onclick="closePopup()">Cerrar</button>
+        </div>
 
-    <div id="message"></div>
+        <div class="back-to-login">
+            <a href="{{ url_for('index') }}" class="back-link">Volver al inicio de sesión</a>
+        </div>
+    </div>
 
     <script>
+        // Función para cerrar el popup
+        function closePopup() {
+            $('#popup-message').hide();
+        }
+
         $(document).ready(function() {
-            // Obtener el ID_CLIENTE de la sesión o establecerlo manualmente
-            const idCliente = {{ ID_CLIENTE }};
-
-            // Cargar los usuarios en el desplegable
-            $.getJSON(`/get_users/${idCliente}`, function(users) {
-                users.forEach(function(user) {
-                    $('#user-select').append(`<option value="${user.id_usr}">${user.nom_usr} (${user.raz_social})</option>`);
-                });
-            });
-
-            // Manejo del envío del formulario
+            // Manejo del envío del formulario por AJAX
             $('#reset-password-form').on('submit', function(e) {
-                e.preventDefault(); // Evitar que se envíe el formulario de forma tradicional
-
-                const userId = $('#user-select').val();
-                const newPassword = $('#new-password').val();
+                e.preventDefault(); // Prevenir el envío tradicional del formulario
 
                 $.ajax({
-                    url: '/reset_user_password', // Ruta para restablecer la contraseña
+                    url: '/mod/reset_password',  // La ruta donde se enviarán los datos
                     method: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ id_usuario: userId, new_password: newPassword }),
+                    dataType: 'json',
+                    data: { email: $('#email').val() },  // Enviar el email
                     success: function(response) {
-                        $('#message').text(response.message);
+                        // Mostrar el popup con el mensaje de éxito
+                        $('#popup-text').text(response.message);
+                        $('#popup-message').show();
                     },
-                    error: function(jqXHR) {
-                        $('#message').text(jqXHR.responseJSON.message);
+                    error: function() {
+                        // Mostrar el popup con un mensaje de error en caso de fallo
+                        $('#popup-text').text('Hubo un error al enviar el formulario.');
+                        $('#popup-message').show();
                     }
                 });
             });
         });
     </script>
 </body>
+<footer>
+    <p>© 2024 Todos los derechos reservados.</p>
+</footer>
 </html>
