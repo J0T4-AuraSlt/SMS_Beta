@@ -1,11 +1,15 @@
+from flask import request, jsonify
 from flask import Flask, request, jsonify
 import os
+import re
 import json
 import logging
 import re
 from datetime import datetime
 from flask import Flask, request, render_template, url_for, flash, session, redirect, abort, jsonify
-from db_config import get_db_connection, release_db_connection
+from werkzeug.security import generate_password_hash
+# from db_config import get_db_connection, release_db_connection
+from db_config import get_db_connection, close_db_connection
 from jinja2 import TemplateNotFound
 import smtplib
 from email.mime.text import MIMEText
@@ -16,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 # Desactivar temporalmente la protección CSRF si estás usando Flask-WTF
-app.config['WTF_CSRF_ENABLED'] = False
+# app.config['WTF_CSRF_ENABLED'] = False
 
 # Configuraciones de seguridad
 app.secret_key = os.environ.get('SECRET_KEY', 'clave_por_defecto_segura')
@@ -165,13 +169,6 @@ def login():
 
     validacion = valida_acceso(ID_CLIENTE, id_usuario, pwd)
 
-    # if validacion.startswith('OK'):
-    #     session['ID_CLIENTE'] = ID_CLIENTE
-    #     session['id_usuario'] = id_usuario
-    #     logger.info("ID_CLIENTE: %s, id_usuario: %s", ID_CLIENTE, id_usuario)
-
-    #     return redirect(url_for('menu'))
-    # #
     if validacion.startswith('OK'):
         session['ID_CLIENTE'] = ID_CLIENTE
         session['id_usuario'] = id_usuario
@@ -194,6 +191,31 @@ def login():
 
 # Función para registrar eventos de usuario en la base de datos
 
+
+# def registrar_evento(id_cliente, id_usuario, modulo_accedido, accion, detalles=None):
+#     conn = get_db_connection()
+#     if conn is None:
+#         logger.error("No se pudo obtener una conexión de base de datos")
+#         return
+
+#     try:
+#         with conn.cursor() as cur:
+#             cur.execute("""
+#                 INSERT INTO registro_eventos (id_cliente, id_usuario, fecha, modulo_accedido, accion, detalles)
+#                 VALUES (%s, %s, %s, %s, %s, %s);
+#             """, (
+#                 id_cliente,
+#                 id_usuario,
+#                 datetime.now(),
+#                 modulo_accedido,
+#                 accion,
+#                 json.dumps(detalles) if detalles else None
+#             ))
+#         conn.commit()
+#     except Exception as e:
+#         logger.error("Error al registrar el evento: %s", e)
+#     finally:
+#         release_db_connection(conn)
 
 def registrar_evento(id_cliente, id_usuario, modulo_accedido, accion, detalles=None):
     conn = get_db_connection()
@@ -218,8 +240,25 @@ def registrar_evento(id_cliente, id_usuario, modulo_accedido, accion, detalles=N
     except Exception as e:
         logger.error("Error al registrar el evento: %s", e)
     finally:
-        release_db_connection(conn)
+        close_db_connection(conn)
 
+
+# def valida_acceso(ID_CLIENTE, id_usuario, pwd):
+#     id_usuario = id_usuario.lower()
+
+#     if len(id_usuario) < 3:
+#         return "ERROR;ID Usuario debe tener al menos 3 caracteres"
+
+#     try:
+#         with get_db_connection() as conn:
+#             with conn.cursor() as cur:
+#                 cur.execute("SELECT public.valida_acceso(%s, %s, %s)",
+#                             (ID_CLIENTE, id_usuario, pwd))
+#                 result = cur.fetchone()
+#         return result[0] if result else "ERROR;Credenciales incorrectas"
+#     except Exception as e:
+#         logger.error("Error al validar acceso: %s", e)
+#         return "ERROR;Error interno. Intenta de nuevo más tarde."
 
 def valida_acceso(ID_CLIENTE, id_usuario, pwd):
     id_usuario = id_usuario.lower()
@@ -227,26 +266,59 @@ def valida_acceso(ID_CLIENTE, id_usuario, pwd):
     if len(id_usuario) < 3:
         return "ERROR;ID Usuario debe tener al menos 3 caracteres"
 
+    conn = None
     try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT public.valida_acceso(%s, %s, %s)",
-                            (ID_CLIENTE, id_usuario, pwd))
-                result = cur.fetchone()
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT public.valida_acceso(%s, %s, %s)",
+                        (ID_CLIENTE, id_usuario, pwd))
+            result = cur.fetchone()
         return result[0] if result else "ERROR;Credenciales incorrectas"
     except Exception as e:
         logger.error("Error al validar acceso: %s", e)
         return "ERROR;Error interno. Intenta de nuevo más tarde."
+    finally:
+        close_db_connection(conn)
 
+
+# def get_menu(ID_CLIENTE, id_usuario):
+#     """Obtiene el menú para el usuario desde la base de datos y agrega íconos."""
+#     try:
+#         with get_db_connection() as conn:
+#             with conn.cursor() as cur:
+#                 cur.execute("SELECT public.get_menu(%s, %s)",
+#                             (ID_CLIENTE, id_usuario))
+#                 result = cur.fetchone()
+
+#         if result and result[0]:
+#             menu_json = json.loads(result[0]) if isinstance(
+#                 result[0], str) else result[0]
+
+#             if not menu_json:
+#                 return {"message": "El menú no tiene información disponible."}
+
+#             # Agregar íconos al menú
+#             for item in menu_json:
+#                 descripcion = item.get('descripcion', '')
+#                 item['icono'] = ICONOS_MENU.get(
+#                     descripcion, "fas fa-question-circle")  # Ícono por defecto
+
+#             return menu_json
+#         else:
+#             return {"message": "No se ha encontrado información para este usuario."}
+#     except Exception as e:
+#         logger.error("Error al obtener el menú: %s", e)
+#         return {"message": "Error al obtener el menú. Intenta de nuevo más tarde."}
 
 def get_menu(ID_CLIENTE, id_usuario):
     """Obtiene el menú para el usuario desde la base de datos y agrega íconos."""
+    conn = None
     try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT public.get_menu(%s, %s)",
-                            (ID_CLIENTE, id_usuario))
-                result = cur.fetchone()
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT public.get_menu(%s, %s)",
+                        (ID_CLIENTE, id_usuario))
+            result = cur.fetchone()
 
         if result and result[0]:
             menu_json = json.loads(result[0]) if isinstance(
@@ -267,15 +339,35 @@ def get_menu(ID_CLIENTE, id_usuario):
     except Exception as e:
         logger.error("Error al obtener el menú: %s", e)
         return {"message": "Error al obtener el menú. Intenta de nuevo más tarde."}
+    finally:
+        close_db_connection(conn)
 
+
+# def obtener_user_menu(ID_CLIENTE, id_usuario):
+#     try:
+#         with get_db_connection() as conn:
+#             with conn.cursor() as cur:
+#                 cur.execute("SELECT public.get_user_menu(%s, %s)",
+#                             (ID_CLIENTE, id_usuario))
+#                 result = cur.fetchone()
+
+#         if result and result[0]:
+#             user_menu_json = result[0]
+#             return json.loads(user_menu_json) if isinstance(user_menu_json, str) else user_menu_json
+#         else:
+#             return None
+#     except Exception as e:
+#         logger.error("Error al obtener la información del usuario: %s", e)
+#         return None
 
 def obtener_user_menu(ID_CLIENTE, id_usuario):
+    conn = None
     try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT public.get_user_menu(%s, %s)",
-                            (ID_CLIENTE, id_usuario))
-                result = cur.fetchone()
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT public.get_user_menu(%s, %s)",
+                        (ID_CLIENTE, id_usuario))
+            result = cur.fetchone()
 
         if result and result[0]:
             user_menu_json = result[0]
@@ -285,6 +377,8 @@ def obtener_user_menu(ID_CLIENTE, id_usuario):
     except Exception as e:
         logger.error("Error al obtener la información del usuario: %s", e)
         return None
+    finally:
+        close_db_connection(conn)
 
 
 @app.route('/menu')
@@ -360,20 +454,6 @@ def get_user_menu_route():
     return jsonify({"message": "Método no permitido"}), 405
 
 
-# @ app.route('/mod/<module_name>')
-# def load_module(module_name):
-#     if not re.match("^[a-zA-Z0-9_]+$", module_name):
-#         abort(404)
-
-#     try:
-#         return render_template(f'mod/{module_name}.html')
-#     except TemplateNotFound:
-#         flash("Módulo no encontrado.", "error")
-#         return redirect(url_for('menu'))
-#     except Exception as e:
-#         logger.error("Error al cargar el módulo %s: %s", module_name, e)
-#         flash("Error al cargar el módulo.", "error")
-#         return redirect(url_for('menu'))
 @ app.route('/mod/<module_name>')
 def load_module(module_name):
     # Validación del nombre del módulo para evitar rutas inseguras
@@ -404,116 +484,43 @@ def load_module(module_name):
         return redirect(url_for('menu'))
 
 
-@app.route('/mod/mAdmcreusr', methods=['GET', 'POST'])
-def crear_usuario():
-    id_usuario = session.get('id_usuario', '').strip().lower()
+def validar_formato_contraseña(pwd):
+    # Validación de formato de contraseña usando regex
+    return bool(re.match(r'^(?=.*[a-zA-ZñÑ])(?=.*[A-ZÑ])(?=.*\d)(?=.*[@$!%*?&])[A-Za-zñÑ\d@$!%*?&]{8,}$', pwd))
 
-    if request.method == 'POST':
-        # Obtener valores del formulario
-        id_clt = request.form.get('id_clt', '').strip()
-        rut_completo = request.form.get('rut', '').strip()
-        nombre_usuario = request.form.get('nomb_usr', '').strip()
-        apellidos = request.form.get('apellidos', '').strip()
-        ema_usr = request.form.get('ema_usr', '').strip().lower()
-        cel_usr = request.form.get('cel_usr', '').strip()
-        id_tda = request.form.get('id_tda', '').strip()
-        id_prf = request.form.get('id_prf', '').strip()
-        pwd = request.form.get('pwd', '').strip()
 
-        # Separar el RUT y el DV
-        if '-' in rut_completo:
-            rut_usr, dv_usr = rut_completo.split('-')
-        else:
-            rut_usr, dv_usr = rut_completo, ''  # Asignar DV vacío si no existe
-
-        # Separar apellidos en paterno y materno
-        apellido_paterno = apellido_materno = ''
-        if apellidos:
-            apellidos_split = apellidos.split(' ')
-            apellido_paterno = apellidos_split[0] if len(
-                apellidos_split) > 0 else ''
-            apellido_materno = apellidos_split[1] if len(
-                apellidos_split) > 1 else ''
-
-        # Datos procesados listos para la inserción
-        form_data = {
-            'id_clt': id_clt,
-            'rut_usr': rut_usr,
-            'dv_usr': dv_usr,
-            'nomb_usr': nombre_usuario,
-            'ape_pat_usr': apellido_paterno,
-            'ape_mat_usr': apellido_materno,
-            'ema_usr': ema_usr,
-            'cel_usr': cel_usr,
-            'id_tda': id_tda,
-            'id_prf': id_prf,
-            'pwd': pwd,
-        }
-
-        # Imprimir los datos procesados para verificación
-        print("Datos procesados para la creación de usuario:", form_data)
-
-        # Verificar que todos los campos requeridos están completos
-        if not all(form_data.values()):
-            return jsonify({'status': 'error', 'message': 'Por favor, complete todos los campos requeridos.'}), 400
-
-        try:
-            with get_db_connection() as conn:
-                with conn.cursor() as cur:
-                    # Llamar a la función crea_usuario en la base de datos
-                    cur.execute("""
-                        SELECT crea_usuario(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-                    """, (
-                        form_data['id_clt'], form_data['rut_usr'], form_data['dv_usr'], form_data['nomb_usr'],
-                        form_data['ape_pat_usr'], form_data['ape_mat_usr'], form_data['ema_usr'],
-                        form_data['cel_usr'], form_data['id_tda'], form_data['id_prf'], form_data['pwd'],
-                        id_usuario
-                    ))
-                    respuesta = cur.fetchone()[0]
-
-    #         if respuesta.startswith('OK'):
-    #             return jsonify({"status": "success", "message": "USUARIO CREADO CON EXITO"})
-    #         else:
-    #             return jsonify({'status': 'error', 'message': respuesta.split(';')[1]}), 400
-
-    #     except Exception as e:
-    #         print(f"Error al crear el usuario: {str(e)}")
-    #         return jsonify({"status": "error", "message": "Error al crear el usuario."}), 500
-
-    # return render_template('mod/mAdmcreusr.html')
-
-            # Simulación de éxito en la creación del usuario
-            return jsonify({"status": "success", "message": "USUARIO CREADO CON EXITO"})
-        except Exception as e:
-            print(f"Error al crear el usuario: {str(e)}")
-            return jsonify({"status": "error", "message": "Error al crear el usuario."}), 500
-
-    return render_template('mod/mAdmcreusr.html')
-
-# opcion 2
 # @app.route('/mod/mAdmcreusr', methods=['GET', 'POST'])
 # def crear_usuario():
 #     id_usuario = session.get('id_usuario', '').strip().lower()
 
 #     if request.method == 'POST':
-#         # Obtener los valores del formulario y verificarlos
-#         form_data = {key: request.form.get(key, '').strip() for key in
-#                      ['id_clt', 'rut_usr', 'dv_usr', 'nomb_usr', 'ape_pat_usr', 'ape_mat_usr',
-#                       'ema_usr', 'cel_usr', 'id_tda', 'id_prf', 'pwd']}
+#         # Obtener y validar valores del formulario
+#         form_data = {
+#             'id_clt': request.form.get('id_clt', '').strip(),
+#             'rut_usr': request.form.get('rut', '').split('-')[0].strip(),
+#             'dv_usr': request.form.get('rut', '').split('-')[1].strip() if '-' in request.form.get('rut', '') else '',
+#             'nomb_usr': request.form.get('nomb_usr', '').strip(),
+#             'ape_pat_usr': request.form.get('apellidos', '').split(' ')[0].strip(),
+#             'ape_mat_usr': request.form.get('apellidos', '').split(' ')[1].strip() if len(request.form.get('apellidos', '').split(' ')) > 1 else '',
+#             'ema_usr': request.form.get('ema_usr', '').strip().lower(),
+#             'cel_usr': request.form.get('cel_usr', '').strip(),
+#             'id_tda': request.form.get('id_tda', '').strip(),
+#             'id_prf': request.form.get('id_prf', '').strip(),
+#             'pwd': request.form.get('pwd', '').strip()
+#         }
 
-#         # Muestra los datos recibidos en la consola
-#         print("Datos recibidos del formulario:", form_data)
-
-#         # Verifica que todos los campos necesarios estén completos
+#         # Verificar que todos los campos requeridos están completos
 #         if not all(form_data.values()):
-#             # En caso de error, recarga la página con un mensaje flash
-#             flash('Por favor, complete todos los campos requeridos.', 'error')
-#             return render_template('mod/mAdmcreusr.html'), 400
+#             return jsonify({'status': 'error', 'message': 'Por favor, complete todos los campos requeridos.'}), 400
 
+#         # Validar formato de contraseña
+#         if not validar_formato_contraseña(form_data['pwd']):
+#             return jsonify({'status': 'error', 'message': 'Formato de contraseña inválido. Debe tener al menos 8 caracteres, incluir una letra mayúscula, un número y un carácter especial.'}), 400
+
+#         # Enviar datos a la base de datos
 #         try:
 #             with get_db_connection() as conn:
 #                 with conn.cursor() as cur:
-#                     # Llamar a la función crea_usuario en la base de datos
 #                     cur.execute("""
 #                         SELECT crea_usuario(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
 #                     """, (
@@ -524,85 +531,85 @@ def crear_usuario():
 #                     ))
 #                     respuesta = cur.fetchone()[0]
 
-#             # Manejo de respuesta desde la base de datos
+#             # Interpretar la respuesta de la función SQL
 #             if respuesta.startswith('OK'):
-#                 flash(respuesta.split(';')[1], 'success')
-#                 return redirect(url_for('mAdmcreusr'))
+#                 return jsonify({"status": "success", "message": "Usuario creado con éxito"})
 #             else:
-#                 flash(respuesta.split(';')[1], 'error')
-#                 return render_template('mod/mAdmcreusr.html'), 400
+#                 # Extraer mensaje de error de la respuesta SQL
+#                 mensaje_error = respuesta.split(
+#                     ';')[1] if ';' in respuesta else 'Error desconocido'
+#                 return jsonify({'status': 'error', 'message': mensaje_error}), 400
 
 #         except Exception as e:
 #             print(f"Error al crear el usuario: {str(e)}")
-#             flash('Error al crear el usuario.', 'error')
-#             return render_template('mod/mAdmcreusr.html'), 500
+#             return jsonify({"status": "error", "message": "Error al crear el usuario en la base de datos."}), 500
 
+#     # Renderizado en caso de petición GET
 #     return render_template('mod/mAdmcreusr.html')
-# opcion 1
-# @app.route('/mod/mAdmcreusr', methods=['GET', 'POST'])
-# def crear_usuario():
-#     id_usuario = session.get('id_usuario', '').strip().lower()
 
-#     if request.method == 'POST':
-#         # Obtener los valores del formulario
-#         id_clt = request.form.get('id_clt')
-#         rut_usr = request.form.get('rut_usr')
-#         dv_usr = request.form.get('dv_usr')
-#         nomb_usr = request.form.get('nomb_usr')
-#         ape_pat_usr = request.form.get('ape_pat_usr')
-#         ape_mat_usr = request.form.get('ape_mat_usr')
-#         ema_usr = request.form.get('ema_usr').lower()
-#         cel_usr = request.form.get('cel_usr')
-#         id_tda = request.form.get('id_tda')
-#         id_prf = request.form.get('id_prf')
-#         pwd = request.form.get('pwd')
+@app.route('/mod/mAdmcreusr', methods=['GET', 'POST'])
+def crear_usuario():
+    id_usuario = session.get('id_usuario', '').strip().lower()
 
-#         # Verificar que los campos requeridos estén completos
-#         if not (rut_usr and dv_usr and nomb_usr and ape_pat_usr and ape_mat_usr and ema_usr and cel_usr and pwd and id_clt and id_tda and id_prf):
-#             flash('Por favor, complete todos los campos requeridos.', 'error')
-#             return render_template('mod/mAdmcreusr.html')
+    if request.method == 'POST':
+        # Obtener y validar valores del formulario
+        form_data = {
+            'id_clt': request.form.get('id_clt', '').strip(),
+            'rut_usr': request.form.get('rut', '').split('-')[0].strip(),
+            'dv_usr': request.form.get('rut', '').split('-')[1].strip() if '-' in request.form.get('rut', '') else '',
+            'nomb_usr': request.form.get('nomb_usr', '').strip(),
+            'ape_pat_usr': request.form.get('apellidos', '').split(' ')[0].strip(),
+            'ape_mat_usr': request.form.get('apellidos', '').split(' ')[1].strip() if len(request.form.get('apellidos', '').split(' ')) > 1 else '',
+            'ema_usr': request.form.get('ema_usr', '').strip().lower(),
+            'cel_usr': request.form.get('cel_usr', '').strip(),
+            'id_tda': request.form.get('id_tda', '').strip(),
+            'id_prf': request.form.get('id_prf', '').strip(),
+            'pwd': request.form.get('pwd', '').strip()
+        }
 
-#         print(
-#             f"Parámetros enviados: {id_clt}, {rut_usr}, {dv_usr}, {nomb_usr}, {ape_pat_usr}, {ape_mat_usr}, {ema_usr}, {cel_usr}, {id_tda}, {id_prf}, {pwd}, {id_usuario}")
+        # Verificar que todos los campos requeridos están completos
+        if not all(form_data.values()):
+            return jsonify({'status': 'error', 'message': 'Por favor, complete todos los campos requeridos.'}), 400
 
-#         try:
-#             with get_db_connection() as conn:
-#                 with conn.cursor() as cur:
-#                     # Llamar a la función crea_usuario en la base de datos
-#                     cur.execute("""
-#                         SELECT crea_usuario(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-#                     """, (
-#                         id_clt,
-#                         rut_usr,
-#                         dv_usr,
-#                         nomb_usr,
-#                         ape_pat_usr,
-#                         ape_mat_usr,
-#                         ema_usr,
-#                         cel_usr,
-#                         id_tda,
-#                         id_prf,
-#                         pwd,
-#                         id_usuario  # usr_cre será el usuario que está creando el nuevo usuario
-#                     ))
+        # Validar formato de contraseña
+        if not validar_formato_contraseña(form_data['pwd']):
+            return jsonify({'status': 'error', 'message': 'Formato de contraseña inválido. Debe tener al menos 8 caracteres, incluir una letra mayúscula, un número y un carácter especial.'}), 400
 
-#                     respuesta = cur.fetchone()[0]
-#                     print(f"Respuesta de la función SQL: {respuesta}")
+        # Enviar datos a la base de datos
+        conn = None
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT crea_usuario(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                """, (
+                    form_data['id_clt'], form_data['rut_usr'], form_data['dv_usr'], form_data['nomb_usr'],
+                    form_data['ape_pat_usr'], form_data['ape_mat_usr'], form_data['ema_usr'],
+                    form_data['cel_usr'], form_data['id_tda'], form_data['id_prf'], form_data['pwd'],
+                    id_usuario
+                ))
 
-#             # Validar la respuesta de la función SQL
-#             if respuesta.startswith('OK'):
-#                 flash(respuesta.split(';')[1], 'success')
-#                 return redirect(url_for('mAdmcreusr'))
-#             else:
-#                 flash(respuesta.split(';')[1], 'error')
-#                 return render_template('mod/mAdmcreusr.html')
+                respuesta = cur.fetchone()[0]
 
-#         except Exception as e:
-#             print(f"Error al crear el usuario: {str(e)}")
-#             flash(f"Error al crear el usuario: {str(e)}", 'error')
-#             return render_template('mod/mAdmcreusr.html')
+            # Confirmar la transacción
+            conn.commit()
 
-#     return render_template('mod/mAdmcreusr.html')
+            # Interpretar la respuesta de la función SQL
+            if respuesta.startswith('OK'):
+                return jsonify({"status": "success", "message": "Usuario creado con éxito"})
+            else:
+                mensaje_error = respuesta.split(
+                    ';')[1] if ';' in respuesta else 'Error desconocido'
+                return jsonify({'status': 'error', 'message': mensaje_error}), 400
+
+        except Exception as e:
+            print(f"Error al crear el usuario: {str(e)}")
+            return jsonify({"status": "error", "message": "Error al crear el usuario en la base de datos."}), 500
+        finally:
+            close_db_connection(conn)
+
+    # Renderizado en caso de petición GET
+    return render_template('mod/mAdmcreusr.html')
 
 
 def enviar_correo(email, nueva_contrasena):
@@ -623,6 +630,233 @@ def enviar_correo(email, nueva_contrasena):
         print(f"Error al enviar correo: {e}")
 
 
+# @app.route('/restpass', methods=['POST'])
+# def restpass():
+#     id_usuario = request.form.get('id_usuario', '').strip().lower()
+#     ID_CLIENTE = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
+#     email_usr = request.form['email_usr']
+
+#     print(id_usuario, ID_CLIENTE, email_usr)
+#     try:
+#         with get_db_connection() as conn:
+#             with conn.cursor() as cur:
+#                 cur.execute("SELECT restablecer_contraseña(%s, %s, %s)",
+#                             (id_usuario, ID_CLIENTE, email_usr))
+#                 nueva_contrasena = "Aquí puedes generar o recuperar la nueva contraseña"
+
+#         enviar_correo(email_usr, nueva_contrasena)
+#         flash("Se ha enviado un correo con la nueva contraseña.")
+#         return redirect(url_for('login'))
+#     except Exception as e:
+#         flash("Por favor, valide su correo y siga las instrucciones.")
+#         return redirect(url_for('login'))
+
+# # Accesos a modulos por perfiles
+
+@app.route('/mod/mAdmgstper', methods=['POST', 'GET'])
+def gestionar_accesos():
+    id_cliente = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
+    conn = None
+
+    # Si es una solicitud POST, se evalúa si estamos consultando módulos o guardando accesos
+    if request.method == 'POST':
+        data = request.get_json()
+        id_prf = data.get('id_prf')
+        modulos = data.get('modulos')  # Captura la lista de módulos
+
+        # Caso 1: Consultar módulos asociados a un perfil
+        if id_prf and not modulos:
+            try:
+                conn = get_db_connection()
+                with conn.cursor() as cur:
+                    print(
+                        f"Consultando módulos para perfil {id_prf} y cliente {id_cliente}")
+                    cur.execute(
+                        "SELECT otorgar_acceso_modulos(%s, %s)", (id_cliente, id_prf))
+                    resultado = cur.fetchone()
+
+                if resultado and resultado[0]:
+                    return jsonify({"status": "success", "modulos": resultado[0]})
+                else:
+                    return jsonify({"status": "success", "modulos": []})
+
+            except Exception as e:
+                print(f"Error al cargar módulos: {e}")
+                return jsonify({"status": "error", "message": "Error al cargar módulos"}), 500
+            finally:
+                if conn:
+                    close_db_connection(conn)
+
+        # Caso 2: Guardar accesos (perfil y módulos seleccionados)
+        elif id_prf and modulos:
+            try:
+                conn = get_db_connection()
+                with conn.cursor() as cur:
+                    for id_modulo in modulos:
+                        print(
+                            f"Otorgando acceso al módulo {id_modulo} para el perfil {id_prf}")
+                        cur.execute(
+                            "INSERT INTO accesos (id_cliente, id_prf, id_modulo) VALUES (%s, %s, %s) "
+                            "ON CONFLICT (id_cliente, id_prf, id_modulo) DO NOTHING",
+                            (id_cliente, id_prf, id_modulo)
+                        )
+
+                conn.commit()
+                print(f"Accesos guardados para el perfil {id_prf}")
+                return jsonify({"status": "success", "message": "Accesos guardados correctamente"})
+
+            except Exception as e:
+                print(f"Error al guardar accesos: {e}")
+                return jsonify({"status": "error", "message": "Error al guardar accesos"}), 500
+            finally:
+                if conn:
+                    close_db_connection(conn)
+
+    # Para una solicitud GET (cargar la página inicial y perfiles disponibles)
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            print(f"Consultando perfiles para cliente {id_cliente}")
+            cur.execute(
+                "SELECT id_prf, dsc FROM public.perfiles WHERE id_clt = %s", (id_cliente,))
+            perfiles = cur.fetchall()
+
+        perfiles_data = [{'id_prf': perfil[0], 'dsc': perfil[1]}
+                         for perfil in perfiles]
+        return render_template('mod/mAdmgstper.html', perfiles=perfiles_data)
+
+    except Exception as e:
+        print(f"Error al cargar perfiles: {e}")
+        return jsonify({"status": "error", "message": "Error al cargar perfiles"}), 500
+    finally:
+        if conn:
+            close_db_connection(conn)
+
+
+# Version funcional
+# @app.route('/mod/mAdmgstper', methods=['GET'])
+# def gestionar_accesos():
+#     id_cliente = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
+#     # Recupera el id_prf de los argumentos GET
+#     id_prf = request.args.get('id_prf', type=int)
+#     print(f"IDEN de perfil recibido desde el frontend: {id_prf}")
+#     conn = None
+#     try:
+#         conn = get_db_connection()
+
+#         # Si se especifica un perfil, devolver los módulos en formato JSON
+#         if id_prf:
+#             with conn.cursor() as cur:
+#                 print(
+#                     f"Consultando módulos para perfil {id_prf} y cliente {id_cliente}")
+#                 cur.execute("SELECT otorgar_acceso_modulos(%s, %s)",
+#                             (id_cliente, id_prf))
+#                 resultado = cur.fetchone()
+
+#             # Verificar si la consulta devuelve módulos
+#             if resultado and resultado[0]:
+#                 return jsonify({"status": "success", "modulos": resultado[0]})
+#             else:
+#                 # Lista vacía si no hay módulos
+#                 return jsonify({"status": "success", "modulos": []})
+
+#         # Si no se especifica un perfil, devolver la lista de perfiles y renderizar el HTML
+#         with conn.cursor() as cur:
+#             print(f"Consultando perfiles para cliente {id_cliente}")
+#             cur.execute(
+#                 "SELECT id_prf, dsc FROM public.perfiles WHERE id_clt = %s", (id_cliente,))
+#             perfiles = cur.fetchall()
+
+#         # Convertir perfiles en una lista de diccionarios para pasarlos al template
+#         perfiles_data = [{'id_prf': perfil[0], 'dsc': perfil[1]}
+#                          for perfil in perfiles]
+#         return render_template('mod/mAdmgstper.html', perfiles=perfiles_data)
+
+#     except Exception as e:
+#         print(f"Error al cargar perfiles o módulos: {e}")
+#         return jsonify({"status": "error", "message": "Error al cargar datos de perfiles o módulos"}), 500
+
+#     finally:
+#         if conn:
+#             close_db_connection(conn)  # Cierra la conexión si fue abierta
+# #### hasta aqui
+
+# @app.route('/mod/mAdmgstper', methods=['GET'])
+# def gestionar_accesos():
+#     id_cliente = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
+#     id_prf = 2  # request.args.get('id_prf', type=int)
+
+#     conn = None
+#     try:
+#         conn = get_db_connection()
+
+#         # Si se especifica un perfil, devolver los módulos en formato JSON
+#         if id_prf:
+#             with conn.cursor() as cur:
+#                 print(
+#                     f"Consultando módulos para perfil {id_prf} y cliente {id_cliente}")
+#                 cur.execute("SELECT otorgar_acceso_modulos(%s, %s)",
+#                             (id_cliente, id_prf))
+#                 resultado = cur.fetchone()
+
+#             if resultado and resultado[0]:
+#                 return jsonify({"status": "success", "modulos": resultado[0]})
+#             else:
+#                 # Lista vacía si no hay módulos
+#                 return jsonify({"status": "success", "modulos": []})
+
+#         # Si no se especifica un perfil, devolver la lista de perfiles y renderizar el HTML
+#         with conn.cursor() as cur:
+#             print(f"Consultando perfiles para cliente {id_cliente}")
+#             cur.execute(
+#                 "SELECT id_prf, dsc FROM public.perfiles WHERE id_clt = %s", (id_cliente,))
+#             perfiles = cur.fetchall()
+
+#         # Convertir perfiles en una lista de diccionarios para pasarlos al template
+#         perfiles_data = [{'id_prf': perfil[0], 'dsc': perfil[1]}
+#                          for perfil in perfiles]
+#         return render_template('mod/mAdmgstper.html', perfiles=perfiles_data)
+
+#     except Exception as e:
+#         print(f"Error al cargar perfiles o módulos: {e}")
+#         return jsonify({"status": "error", "message": "Error al cargar datos de perfiles o módulos"}), 500
+#     finally:
+#         close_db_connection(conn)
+
+
+@app.route('/mod/obtener_modulos', methods=['GET'])
+def obtener_modulos():
+    id_prf = request.args.get('id_prf', type=int)
+    id_cliente = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
+
+    if not id_prf or not id_cliente:
+        return jsonify({"status": "error", "message": "Perfil o cliente no especificado."}), 400
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            # Obtener módulos permitidos para el perfil seleccionado
+            cur.execute("""
+                SELECT m.id_modulo, m.desc_modulo
+                FROM public.modulos m
+                INNER JOIN public.perfiles_modulo pm ON pm.id_modulo = m.id_modulo
+                WHERE pm.id_prf = %s AND pm.id_clt = %s
+            """, (id_prf, id_cliente))
+            modulos = cur.fetchall()
+
+        # Convertir módulos en lista de diccionarios para enviar como JSON
+        modulos_data = [{'id_modulo': modulo[0],
+                         'desc_modulo': modulo[1]} for modulo in modulos]
+        return jsonify({"status": "success", "modulos": modulos_data})
+
+    except Exception as e:
+        print(f"Error al obtener módulos: {e}")
+        return jsonify({"status": "error", "message": "Error al obtener módulos"}), 500
+    finally:
+        close_db_connection(conn)
+
+
 @app.route('/restpass', methods=['POST'])
 def restpass():
     id_usuario = request.form.get('id_usuario', '').strip().lower()
@@ -630,12 +864,13 @@ def restpass():
     email_usr = request.form['email_usr']
 
     print(id_usuario, ID_CLIENTE, email_usr)
+    conn = None
     try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT restablecer_contraseña(%s, %s, %s)",
-                            (id_usuario, ID_CLIENTE, email_usr))
-                nueva_contrasena = "Aquí puedes generar o recuperar la nueva contraseña"
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT restablecer_contraseña(%s, %s, %s)",
+                        (id_usuario, ID_CLIENTE, email_usr))
+            nueva_contrasena = "Aquí puedes generar o recuperar la nueva contraseña"
 
         enviar_correo(email_usr, nueva_contrasena)
         flash("Se ha enviado un correo con la nueva contraseña.")
@@ -643,16 +878,42 @@ def restpass():
     except Exception as e:
         flash("Por favor, valide su correo y siga las instrucciones.")
         return redirect(url_for('login'))
+    finally:
+        close_db_connection(conn)
 
+
+# @app.route('/get_users', methods=['GET'])
+# def get_users():
+#     ID_CLIENTE = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
+#     try:
+#         with get_db_connection() as conn:
+#             with conn.cursor() as cur:
+#                 cur.execute("SELECT get_users(%s)", (ID_CLIENTE))
+#                 users = cur.fetchall()
+#         user_list = [
+#             {
+#                 'id_usr': user[0],
+#                 'raz_social': user[1],
+#                 'nom_usr': user[2],
+#                 'dsc': user[3],
+#                 'pwd': user[4]
+#             }
+#             for user in users
+#         ]
+#         return jsonify(user_list)
+
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
 @app.route('/get_users', methods=['GET'])
 def get_users():
     ID_CLIENTE = session.get('ID_CLIENTE', ID_CLIENTE_DEFAULT)
+    conn = None
     try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT get_users(%s)", (ID_CLIENTE))
-                users = cur.fetchall()
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT get_users(%s)", (ID_CLIENTE,))
+            users = cur.fetchall()
         user_list = [
             {
                 'id_usr': user[0],
@@ -667,6 +928,8 @@ def get_users():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    finally:
+        close_db_connection(conn)
 
 
 @app.route('/logout')

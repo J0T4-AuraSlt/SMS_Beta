@@ -18,7 +18,7 @@
 [data-theme="dark"] {
     --background-color: #1c1c1c;
     --text-color-bar: #e0e0e0;
-    --text-color: #e0e0e0;
+    --text-color: #858484;
     --navbar-bg-color: #333333;
     --navbar-text-color: #ffffff;
     --submenu-bg-color: #444444;
@@ -29,6 +29,37 @@
     --button-cancel-hover-bg-color: #801a28;
     --footer-bg-color: #333333;
     --footer-text-color: #e0e0e0;
+}
+
+/* Responsive: Pantallas pequeñas */
+@media (max-width: 768px) {
+    .navbar {
+        width: 100%;
+        position: relative;
+        height: auto;
+    }
+
+    .content {
+        margin-left: 0;
+        padding: 15px;
+    }
+
+    form {
+        grid-template-columns: 1fr;
+    }
+
+    button {
+        width: 100%;
+    }
+}
+
+/* General */
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
 }
 
 /* Barra superior */
@@ -43,15 +74,16 @@
     left: 0;
     width: 100%;
     z-index: 100;
+    height: 50px;
     font-family: 'Roboto', sans-serif;
     font-weight: bolder;
     color: var(--text-color-bar);
-    height: 50px;
 }
 
 
+
 /* Contenedor del botón "Cerrar sesión" */
-.cerrar-sesion {
+/*.cerrar-sesion {
     margin-left: unset;
     display: fixed;
     justify-content: center;
@@ -70,7 +102,7 @@
 
 .cerrar-sesion a:hover {
     background-color: var(--submenu-hover-bg-color);
-}
+}*/
 
 
 /* Contenedor del botón "Home" */
@@ -96,16 +128,7 @@
 }
 
 
-/* General */
-body {
-    margin: 0;
-    padding: 20px;
-    font-family: 'Roboto', sans-serif;
-    background-color: var(--background-color);
-    color: var(--text-color);
-}
-
-/* Logo */
+/* Logo home*/
 .logotwo {
     width: 120px;
     height: auto;
@@ -128,7 +151,6 @@ body {
     color: var(--navbar-text-color);
     overflow-y: auto;
 }
-
 
 
 .navbar ul {
@@ -278,29 +300,8 @@ footer {
     background-color: #dc3545;
 }
 
-/* Responsive: Pantallas pequeñas */
-@media (max-width: 768px) {
-    .navbar {
-        width: 100%;
-        position: relative;
-        height: auto;
-    }
 
-    .content {
-        margin-left: 0;
-        padding: 15px;
-    }
-
-    form {
-        grid-template-columns: 1fr;
-    }
-
-    button {
-        width: 100%;
-    }
-}
-
-/* Tabla de Información */
+/* Tabla de Información Incorpora contenidos*/
 .table-container {
     margin-top: 20px;
     background: var(--white);
@@ -352,7 +353,7 @@ footer {
     margin-right: 6px;
   }
   
-  /* Estilo del Gráfico */
+  /* Estilo del Gráfico del modulos Ventas */
   .chart-container {
     margin-top: 20px;
     padding: 20px;
@@ -380,4 +381,161 @@ footer {
     color: #721c24;
     background-color: #f8d7da;
     border-color: #f5c6cb;
+}
+/* Estilos para el popup */
+.popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 300px;
+    width: 100%;
+}
+
+.popup-content button {
+    margin-top: 10px;
+}
+
+.hidden {
+    display: none;
+}
+/*cambios 0411*/
+/* Iconos de Botones de usuario y cliente */
+.client-info, .user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.client-name, .current-date, .user-name, .user-role {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: bold;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.user-details {
+    color: var(--text-color-bar);
+}
+
+/* Iconos de Botones en la Barra Superior */
+.icon-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.icon-btn {
+    color: var(--text-color-bar);
+    font-size: 1.5em;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    transition: color 0.3s;
+}
+
+.icon-btn:hover {
+    color: var(--submenu-hover-bg-color);
+}
+
+/* Tooltip */
+.icon-btn[title] {
+    position: relative;
+}
+
+.icon-btn[title]::after {
+    content: attr(title);
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--text-color-bar);
+    color: white;
+    font-size: 0.75em;
+    padding: 4px 8px;
+    border-radius: 5px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s;
+}
+
+.icon-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Dashboard Estilos */
+.dashboard-header h1 {
+    font-size: 1.8em;
+    color: --text-color;
+    margin-bottom: 10px;
+}
+
+.dashboard-content {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.card {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.card h2 {
+    font-size: 1.2em;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.amount, .stat-number {
+    font-size: 2.4em;
+    font-weight: bold;
+    color: #333;
+    margin: 10px 0;
+}
+
+.percentage {
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.percentage.positive {
+    color: #28a745;
+    background-color: #e6f4e8;
+}
+
+.percentage.negative {
+    color: #dc3545;
+    background-color: #f8e0e0;
+}
+
+#product-stat-chart, #customer-habits-chart {
+    width: 100%;
+    max-width: 250px;
+    height: 150px;
+    margin: 0 auto;
 }

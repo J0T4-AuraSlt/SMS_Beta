@@ -1,133 +1,117 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Creación de Usuario</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menucons.css') }}">
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
-</head>
-<body>
-
-<div class="modulo">
-    <h1>Creación de Usuario</h1>
-
-    <form id="crearUsuarioForm" method="POST" action="{{ url_for('crear_usuario') }}" onsubmit="prepararDatos();">
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style_menucons.css') }}"
+    />
+  </head>
+  <body>
+    <div class="modulo">
+      <h1>Creación de Usuario</h1>
+      <form id="crearUsuarioForm" method="POST">
         <div class="form-group">
-            <label for="id_clt">Cliente:</label>
-            <select id="id_clt" name="id_clt" required aria-label="Cliente">
-                <option value="" disabled {% if request.form.id_clt == '' %}selected{% endif %}>Seleccione un Cliente</option>
-                <option value="99" {% if request.form.id_clt == '99' %}selected{% endif %}>Clte. de Pruebas</option>
-                <option value="1" {% if request.form.id_clt == '1' %}selected{% endif %}>Falabella</option>
-                <option value="2" {% if request.form.id_clt == '2' %}selected{% endif %}>La Polar</option>
-                <option value="3" {% if request.form.id_clt == '3' %}selected{% endif %}>ABCDIN</option>
-                <option value="4" {% if request.form.id_clt == '4' %}selected{% endif %}>Vivo</option>
-            </select>
+          <label for="id_clt">Cliente:</label>
+          <select id="id_clt" name="id_clt" required>
+            <option value="" disabled selected>Seleccione un Cliente</option>
+            <option value="99">Clte. de Pruebas</option>
+            <option value="1">Falabella</option>
+            <option value="2">La Polar</option>
+            <option value="3">ABCDIN</option>
+            <option value="4">Vivo</option>
+          </select>
         </div>
 
         <div class="form-group">
-            <label for="id_tda">Tienda:</label>
-            <select id="id_tda" name="id_tda" required aria-label="Tienda">
-                <option value="0">Dummy</option>
-            </select>
+          <label for="id_tda">Tienda:</label>
+          <select id="id_tda" name="id_tda" required>
+            <option value="0">Dummy</option>
+          </select>
         </div>
 
         <div class="form-group">
-            <label for="id_prf">Perfil:</label>
-            <select id="id_prf" name="id_prf" required aria-label="Perfil">
-                <option value="" disabled {% if request.form.id_prf == '' %}selected{% endif %}>Seleccione un Perfil</option>
-                <option value="1" {% if request.form.id_prf == '1' %}selected{% endif %}>Jefe de Tienda</option>
-                <option value="2" {% if request.form.id_prf == '2' %}selected{% endif %}>Gerente de Tienda</option>
-                <option value="3" {% if request.form.id_prf == '3' %}selected{% endif %}>Supervisor</option>
-                <option value="4" {% if request.form.id_prf == '4' %}selected{% endif %}>Vendedor</option>
-                <option value="5" {% if request.form.id_prf == '5' %}selected{% endif %}>Cajero</option>
-                <option value="6" {% if request.form.id_prf == '6' %}selected{% endif %}>Administrador</option>
-                <option value="7" {% if request.form.id_prf == '7' %}selected{% endif %}>Promotor</option>
-                <option value="0" {% if request.form.id_prf == '0' %}selected{% endif %}>Super Usuario</option>
-            </select>
+          <label for="id_prf">Perfil:</label>
+          <select id="id_prf" name="id_prf" required>
+            <option value="" disabled selected>Seleccione un Perfil</option>
+            <option value="0">Jefe de Tienda</option>
+            <option value="1">Gerente de Tienda</option>
+            <option value="2">Supervisor</option>
+            <option value="3">Vendedor</option>
+            <option value="5">Promotor</option>
+            <option value="6">Cajero</option>
+            <option value="4">Super Usuario</option>
+          </select>
         </div>
 
         <div class="form-group">
-            <label for="rut">RUT:</label>
-            <input type="text" id="rut" name="rut" required aria-label="RUT" placeholder="Ej: 12345678-K" value="{{ request.form.rut }}">
+          <label for="rut">RUT:</label>
+          <input
+            type="text"
+            id="rut"
+            name="rut"
+            required
+            placeholder="Ej: 12345678-K"
+          />
         </div>
 
         <div class="form-group">
-            <label for="nomb_usr">Nombres:</label>
-            <input type="text" id="nomb_usr" name="nomb_usr" required aria-label="Nombre" value="{{ request.form.nomb_usr }}">
+          <label for="nomb_usr">Nombres:</label>
+          <input type="text" id="nomb_usr" name="nomb_usr" required />
         </div>
 
         <div class="form-group">
-            <label for="apellidos">Apellidos:</label>
-            <input type="text" id="apellidos" name="apellidos" required aria-label="Apellidos" placeholder="Ej: Pérez González" value="{{ request.form.apellidos }}">
+          <label for="apellidos">Apellidos:</label>
+          <input
+            type="text"
+            id="apellidos"
+            name="apellidos"
+            required
+            placeholder="Ej: Pérez González"
+          />
         </div>
 
         <div class="form-group">
-            <label for="ema_usr">Email:</label>
-            <input type="email" id="ema_usr" name="ema_usr" required aria-label="Email" value="{{ request.form.ema_usr }}">
+          <label for="ema_usr">Email:</label>
+          <input type="email" id="ema_usr" name="ema_usr" required />
         </div>
 
         <div class="form-group">
-            <label for="cel_usr">Teléfono (celular):</label>
-            <input type="text" id="cel_usr" name="cel_usr" required aria-label="Celular" value="{{ request.form.cel_usr }}">
+          <label for="cel_usr">Teléfono (celular):</label>
+          <input type="text" id="cel_usr" name="cel_usr" required />
         </div>
 
         <div class="form-group">
-            <label for="pwd">Contraseña:</label>
-            <input type="password" id="pwd" name="pwd" required aria-label="Contraseña">
+          <label for="pwd">Contraseña:</label>
+          <input type="password" id="pwd" name="pwd" required />
         </div>
 
         <div class="form-group">
-            <label for="imagen">Imagen:</label>
-            <input type="file" id="imagen" name="imagen" aria-label="Imagen">
+          <label for="imagen">Imagen:</label>
+          <input type="file" id="imagen" name="imagen" />
         </div>
 
         <!-- Campos Ocultos para RUT y Apellidos Separados -->
-        <input type="hidden" id="rut_usr" name="rut_usr">
-        <input type="hidden" id="dv_usr" name="dv_usr">
-        <input type="hidden" id="ape_pat_usr" name="ape_pat_usr">
-        <input type="hidden" id="ape_mat_usr" name="ape_mat_usr">
+        <input type="hidden" id="rut_usr" name="rut_usr" />
+        <input type="hidden" id="dv_usr" name="dv_usr" />
+        <input type="hidden" id="ape_pat_usr" name="ape_pat_usr" />
+        <input type="hidden" id="ape_mat_usr" name="ape_mat_usr" />
 
         <div class="form-actions">
-            <button id="submitBtn" type="submit" onclick="prepararDatos()">Crear Usuario</button>
-            <button type="button" class="cancel" onclick="window.location.href='{{ url_for('menu') }}'">Cancelar</button>
+          <button id="submitBtn" type="submit">Crear Usuario</button>
+          <button type="button" class="cancel">Cancelar</button>
         </div>
-    </form>
-</div>
-<!-- Modal de Confirmación -->
-<div class="modal fade" id="mensajeModal" tabindex="-1" aria-labelledby="mensajeModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="mensajeModalLabel">Resultado de la Operación</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body" id="mensajeModalBody"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-            </div>
-        </div>
+      </form>
     </div>
-</div>
 
-<script>
-    // Función para preparar los datos antes de enviar el formulario
-    function prepararDatos() {
-        const rutCompleto = document.getElementById('rut').value;
-        const [rut, dv] = rutCompleto.split('-');
-        document.getElementById('rut_usr').value = rut || '';
-        document.getElementById('dv_usr').value = dv || '';
-
-        const apellidos = document.getElementById('apellidos').value.split(' ');
-        document.getElementById('ape_pat_usr').value = apellidos[0] || '';
-        document.getElementById('ape_mat_usr').value = apellidos[1] || '';
-    }
-</script>
-
-<script src="{{ url_for('static', filename='js/menu.js') }}"></script>
-
-</body>
+    <!-- Popup de Confirmación -->
+    <div id="popup" style="display: none">
+      <div class="popup-content">
+        <span id="popup-message"></span>
+        <button onclick="closePopup()">Cerrar</button>
+      </div>
+    </div>
+  </body>
 </html>

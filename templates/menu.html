@@ -3,12 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Menú Principal SMS</title>
-    <link
-      rel="icon"
-      href="{{ url_for('static', filename='imagen/favicon-vivo.png') }}"
-      type="image/x-icon"
-    />
+    <title>Principal SMS</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style_menucons.css') }}"
@@ -17,54 +12,76 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
-    <!-- Enlace al archivo JavaScript externo -->
-    <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='imagen/favicon-vivo.png') }}"
+      type="image/x-icon"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
-
   <body>
+    <!-- Barra Superior -->
+    <img
+      src="{{ url_for('static', filename='imagen/logo-clt.png') }}"
+      alt="Logo de la Empresa"
+      class="logotwo"
+    />
     <div class="info-bar">
-      <img
-        src="{{ url_for('static', filename='imagen/logo-clt.png') }}"
-        alt="Logo de la Empresa"
-        class="logotwo"
-      />
-      <span> <i class="fas fa-building"></i> {{ raz_social }}</span>
-      <span> <i class="fas fa-user"></i> {{ nom_usr|upper }}</span>
-      <span> <i class="fas fa-calendar-alt"></i> {{ fecha_hora }}</span>
-
-      <div class="home">
-        <a href="{{ url_for('menu') }}"><i class="fas fa-home"></i> Home</a>
+      <div class="client-info">
+        <span class="client-name"
+          ><i class="fas fa-building"></i> {{ raz_social }}</span
+        >
+        <span class="current-date"
+          ><i class="fas fa-calendar-alt"></i>
+          <!-- Fecha formateada aquí --></span
+        >
       </div>
-
-      <div class="cerrar-sesion">
-        <a href="{{ url_for('index') }}">Cerrar Sesión</a>
+      <div class="user-info">
+        <img
+          src="{{ url_for('static', filename='imagen/user-avatar.png') }}"
+          alt="Avatar de Usuario"
+          class="user-avatar"
+        />
+        <div class="user-details">
+          <span class="user-name">{{ nom_usr|upper }}</span>
+          <span class="user-role">{{ dsc|default('Sin Perfil') }}</span>
+        </div>
       </div>
-      <button id="theme-toggle">Cambiar Tema</button>
+      <div class="icon-buttons">
+        <a href="{{ url_for('menu') }}" title="Inicio" class="icon-btn"
+          ><i class="fas fa-home"></i
+        ></a>
+        <a href="{{ url_for('index') }}" title="Cerrar Sesión" class="icon-btn"
+          ><i class="fas fa-sign-out-alt"></i
+        ></a>
+        <button id="theme-toggle" title="Cambiar Tema" class="icon-btn">
+          <i class="fas fa-adjust"></i>
+        </button>
+      </div>
     </div>
+
+    <!-- Contenedor Principal -->
     <div
       class="main-container"
       style="display: flex; height: calc(100vh - 50px)"
     >
+      <!-- Menú Lateral -->
       <nav class="navbar">
-        <!--
-        style="width: 250px; background-color: #82b3ef"
-      -->
         <ul>
           {% if menu %} {% for item in menu %}
           <li>
-            <a href="#">
-              <i class="{{ item['icono'] }}"></i> {{ item['descripcion'] }}
-            </a>
+            <a href="#"
+              ><i class="{{ item['icono'] }}"></i> {{ item['descripcion'] }}</a
+            >
             {% if item['hijos'] %}
-            <ul class="submenu" style="display: none">
+            <ul class="submenu">
               {% for child in item['hijos'] %}
               <li>
                 <a
                   href="{{ url_for('load_module', module_name=child['path']) }}"
+                  ><i class="{{ child['icono'] }}"></i> {{ child['descripcion']
+                  }}</a
                 >
-                  <i class="{{ child['icono'] }}"></i> {{ child['descripcion']
-                  }}
-                </a>
               </li>
               {% endfor %}
             </ul>
@@ -76,32 +93,59 @@
         </ul>
       </nav>
 
-      <div class="content" style="flex-grow: 2; padding: 20px">
-        <h2>Bienvenido</h2>
-        <p>
-          Hola <strong>{{ nom_usr }}</strong>, tu perfil es:
-          <strong>{{ dsc|default('Sin Perfil')|upper }}</strong>.
-        </p>
-        <p>
-          Por favor selecciona un módulo del menú para visualizar su contenido.
-        </p>
-        <p><strong>Tienes acceso a:</strong></p>
-        {% if menu %}
-        <ul>
-          {% for item in menu %}
-          <li><strong>{{ item['descripcion'] }}</strong></li>
-          {% if item['hijos'] %}
-          <ul>
-            {% for child in item['hijos'] %}
-            <li>{{ child['descripcion'] }}</li>
-            {% endfor %}
-          </ul>
-          {% endif %} {% endfor %}
-        </ul>
-        {% else %}
-        <strong>No tienes acceso a ningún módulo.</strong>
-        {% endif %}
+      <!-- Contenido del Dashboard -->
+      <div class="content">
+        <div class="dashboard">
+          <div class="dashboard-header">
+            <h1>Información de ventas</h1>
+          </div>
+
+          <div class="dashboard-content">
+            <div class="card total-sales">
+              <h2>Total Ventas</h2>
+              <p class="amount">$7.612.917</p>
+              <span class="percentage positive">+2.08%</span>
+              <p>Productos vs mes pasado</p>
+            </div>
+
+            <div class="card total-orders">
+              <h2>Total de Pedidos</h2>
+              <p class="amount">347.760</p>
+              <span class="percentage positive">+12.4%</span>
+              <p>Pedidos vs mes pasado</p>
+            </div>
+
+            <div class="card visitor">
+              <h2>Visitante</h2>
+              <p class="amount">14.987</p>
+              <span class="percentage negative">-2.08%</span>
+              <p>Usuarios vs mes pasado</p>
+            </div>
+
+            <div class="card store-segment">
+              <h2>Segmento de tienda con mayor visitas</h2>
+              <p>Distribución de visitas</p>
+              <canvas id="store-segment-chart"></canvas>
+            </div>
+
+            <div class="card product-statistic">
+              <h2>Estadística de productos</h2>
+              <p class="stat-number">9.829</p>
+              <span class="percentage positive">+5.34%</span>
+              <p>Venta de productos</p>
+              <canvas id="product-stat-chart"></canvas>
+            </div>
+
+            <div class="card customer-habits">
+              <h2>Hábitos de clientes</h2>
+              <p>Seguimiento del hábito de clientes</p>
+              <canvas id="customer-habits-chart"></canvas>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+
+    <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
   </body>
 </html>

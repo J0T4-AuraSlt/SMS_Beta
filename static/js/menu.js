@@ -1,3 +1,5 @@
+console.log("menu.js cargado correctamente"); 
+
 function cargarModulo(url) {
     fetch(url)
         .then((response) => {
@@ -10,7 +12,10 @@ function cargarModulo(url) {
             document.querySelector(".content").innerHTML = data; // Cargar contenido en el área de contenido
 
             // Espera breve antes de registrar eventos para asegurar que el DOM esté listo
-            setTimeout(registrarEventosModulo, 50);
+            setTimeout(() => {
+                registrarEventosModulo();
+                registrarEventoCrearUsuario();  // Registrar el evento submit para crear usuario
+            }, 50);
         })
         .catch((error) => {
             console.error("Hubo un problema con la solicitud Fetch:", error);
@@ -219,25 +224,262 @@ function renderSalesChart() {
     });
 }
 
+
+function registrarEventoCrearUsuario() {
+    const crearUsuarioForm = document.getElementById("crearUsuarioForm");
+    if (crearUsuarioForm) {
+        crearUsuarioForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            prepararDatos();
+
+            const submitBtn = document.getElementById("submitBtn");
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Creando...";
+
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch("/mod/mAdmcreusr", {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                });
+
+                if (response.ok && response.headers.get("content-type").includes("application/json")) {
+                    const data = await response.json();
+                    showPopup(data.message, data.status === "success" ? "success" : "error");
+                } else {
+                    showPopup("Error en la creacion, verifique los campos ingresados.", "error");
+                }
+            } catch (error) {
+                console.error("Error al enviar el formulario:", error);
+                showPopup("Hubo un error al crear el usuario.", "error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Crear Usuario";
+            }
+        });
+    }
+}
+
+function prepararDatos() {
+    const rutCompleto = document.getElementById("rut").value;
+    const [rut, dv] = rutCompleto.split("-");
+    document.getElementById("rut_usr").value = rut || "";
+    document.getElementById("dv_usr").value = dv || "";
+
+    const apellidos = document.getElementById("apellidos").value.split(" ");
+    document.getElementById("ape_pat_usr").value = apellidos[0] || "";
+    document.getElementById("ape_mat_usr").value = apellidos[1] || "";
+}
+
+function showPopup(message, type = 'success') {
+    const popup = document.getElementById("popup");
+    const popupMessage = document.getElementById("popup-message");
+
+    popupMessage.innerText = message;
+    popup.className = `fade-in ${type}`;
+    popup.style.display = "block";
+
+    setTimeout(() => {
+        popup.classList.add("fade-out");
+        setTimeout(() => {
+            popup.style.display = "none";
+            popup.classList.remove("fade-in", "fade-out", "success", "error");
+        }, 300);
+    }, 3000);
+}
+// Configuración del gráfico de "Product Statistic"
+const productStatCtx = document.getElementById('product-stat-chart').getContext('2d');
+new Chart(productStatCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Electrónica', 'Juegos', 'Muebles'],
+        datasets: [{
+            data: [2487, 1828, 1063],
+            backgroundColor: ['#4e73df', '#1cc88a', '#e74a3b'],
+            hoverOffset: 4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(tooltipItem) {
+                        return tooltipItem.label + ': ' + tooltipItem.raw.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Configuración del gráfico de "Customer Habits"
+const customerHabitsCtx = document.getElementById('customer-habits-chart').getContext('2d');
+new Chart(customerHabitsCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul'],
+        datasets: [
+            {
+                label: 'Productos vistos',
+                data: [45000, 50000, 55000, 40000, 30000, 52000, 48000],
+                backgroundColor: '#4e73df'
+            },
+            {
+                label: 'Ventas',
+                data: [39000, 42000, 43000, 38000, 34000, 45000, 47000],
+                backgroundColor: '#1cc88a'
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+// Configuración del gráfico de "Segmento de Tienda"
+const storeSegmentCtx = document.getElementById('store-segment-chart').getContext('2d');
+new Chart(storeSegmentCtx, {
+    type: 'pie',
+    data: {
+        labels: ['Mall', 'Sucursal', 'Retail'],
+        datasets: [{
+            data: [4500, 3000, 2500], // Datos ficticios de visitas
+            backgroundColor: ['#4e73df', '#1cc88a', '#e74a3b'],
+            hoverOffset: 4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(tooltipItem) {
+                        return tooltipItem.label + ': ' + tooltipItem.raw.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Formatear la fecha al cargar la página
+document.addEventListener('DOMContentLoaded', () => {
+    const fechaElement = document.querySelector('.current-date');
+    const fechaActual = new Date();
+    const opcionesFecha = { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' };
+    
+    // Obtener la fecha formateada con el mes corto
+    let fechaFormateada = fechaActual.toLocaleDateString('es-ES', opcionesFecha);
+    
+    // Añadir el punto al mes abreviado
+    fechaFormateada = fechaFormateada.replace(/\b(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)\b/, '$&.');
+
+    fechaElement.textContent = fechaFormateada;
+});
+
+// document.addEventListener('DOMContentLoaded', () => {
+//     const fechaElement = document.querySelector('.current-date');
+//     const fechaActual = new Date();
+//     const opcionesFecha = { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' };
+//     fechaElement.textContent = fechaActual.toLocaleDateString('es-ES', opcionesFecha);
+// });
+
+// Cambiar Tema
+// const themeToggleButton = document.getElementById('theme-toggle');
+// themeToggleButton.addEventListener('click', () => {
+//     document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+// });
+
+
+// document.addEventListener("DOMContentLoaded", function () {
+//     const themeToggle = document.getElementById("theme-toggle");
+//     const currentTheme = localStorage.getItem("theme") || "light";
+//     document.documentElement.setAttribute("data-theme", currentTheme);
+
+//     themeToggle.textContent = currentTheme === "dark" ? "Modo Claro" : "Modo Oscuro";
+//     themeToggle.addEventListener("click", function () {
+//         let theme = document.documentElement.getAttribute("data-theme");
+//         if (theme === "light") {
+//             document.documentElement.setAttribute("data-theme", "dark");
+//             localStorage.setItem("theme", "dark");
+//             themeToggle.textContent = "Modo Claro";
+//         } else {
+//             document.documentElement.setAttribute("data-theme", "light");
+//             localStorage.setItem("theme", "light");
+//             themeToggle.textContent = "Modo Oscuro";
+//         }
+//     });
+
+//     const links = document.querySelectorAll(".navbar > ul > li > a");
+//     const submenuLinks = document.querySelectorAll(".submenu a");
+//     links.forEach((link) => {
+//         link.addEventListener("click", function (e) {
+//             e.preventDefault();
+//             const submenu = this.nextElementSibling;
+//             if (submenu) {
+//                 document.querySelectorAll(".submenu").forEach((sm) => {
+//                     if (sm !== submenu) sm.style.display = "none";
+//                 });
+//                 submenu.style.display = submenu.style.display === "block" ? "none" : "block";
+//             } else {
+//                 document.querySelectorAll(".submenu").forEach((sm) => (sm.style.display = "none"));
+//             }
+//         });
+//     });
+
+//     submenuLinks.forEach((submenuLink) => {
+//         submenuLink.addEventListener("click", function (e) {
+//             e.preventDefault();
+//             const url = this.getAttribute("href");
+//             if (url) {
+//                 cargarModulo(url);
+//                 saveCurrentModule(url);
+//             }
+//         });
+//     });
+
+//     registrarEventosModulo(); // Register events for the initial load
+//     registrarEventoCrearUsuario(); // Registrar evento para el formulario de creación de usuario
+// });
+
 document.addEventListener("DOMContentLoaded", function () {
     const themeToggle = document.getElementById("theme-toggle");
     const currentTheme = localStorage.getItem("theme") || "light";
     document.documentElement.setAttribute("data-theme", currentTheme);
 
-    themeToggle.textContent = currentTheme === "dark" ? "Modo Claro" : "Modo Oscuro";
+    // Establecer el icono inicial según el tema
+    themeToggle.className = currentTheme === "dark" ? "fas fa-sun" : "fas fa-moon";
+
     themeToggle.addEventListener("click", function () {
+        // Alternar entre temas claro y oscuro
         let theme = document.documentElement.getAttribute("data-theme");
         if (theme === "light") {
             document.documentElement.setAttribute("data-theme", "dark");
             localStorage.setItem("theme", "dark");
-            themeToggle.textContent = "Modo Claro";
+            themeToggle.className = "fas fa-sun"; // Cambiar a icono de sol para modo oscuro
         } else {
             document.documentElement.setAttribute("data-theme", "light");
             localStorage.setItem("theme", "light");
-            themeToggle.textContent = "Modo Oscuro";
+            themeToggle.className = "fas fa-moon"; // Cambiar a icono de luna para modo claro
         }
     });
 
+    // Configuración de submenús en el menú de navegación
     const links = document.querySelectorAll(".navbar > ul > li > a");
     const submenuLinks = document.querySelectorAll(".submenu a");
     links.forEach((link) => {
@@ -245,182 +487,31 @@ document.addEventListener("DOMContentLoaded", function () {
             e.preventDefault();
             const submenu = this.nextElementSibling;
             if (submenu) {
+                // Ocultar otros submenús al abrir uno nuevo
                 document.querySelectorAll(".submenu").forEach((sm) => {
                     if (sm !== submenu) sm.style.display = "none";
                 });
                 submenu.style.display = submenu.style.display === "block" ? "none" : "block";
             } else {
+                // Cerrar todos los submenús si no hay un submenu asociado
                 document.querySelectorAll(".submenu").forEach((sm) => (sm.style.display = "none"));
             }
         });
     });
 
+    // Enlaces de los submenús y carga de módulos
     submenuLinks.forEach((submenuLink) => {
         submenuLink.addEventListener("click", function (e) {
             e.preventDefault();
             const url = this.getAttribute("href");
             if (url) {
-                cargarModulo(url);
-                saveCurrentModule(url);
+                cargarModulo(url); // Llamada a la función para cargar módulo
+                saveCurrentModule(url); // Guardar estado del módulo actual
             }
         });
     });
 
-    registrarEventosModulo(); // Register events for the initial load
-});
-document.getElementById("cancelar").addEventListener("click", function () {
-  // Reinicia el formulario, limpiando todos los campos de entrada
-  document.getElementById("config-form").reset();
-  
-  // Oculta el contenedor de separador si está visible
-  document.getElementById("separador-container").style.display = "none";
-  
-  // Elimina todas las filas agregadas dinámicamente en la tabla de campos
-  const camposBody = document.getElementById("campos-body");
-  while (camposBody.rows.length > 1) { // Mantener solo la primera fila por defecto
-      camposBody.deleteRow(1);
-  }
-  
-  // Limpia los campos de fecha y los checkboxes de días de la semana
-  document.getElementById("fecha-inicio").value = "";
-  document.getElementById("fecha-fin").value = "";
-  document.querySelectorAll(".checkbox-group input[type='checkbox']").forEach(checkbox => {
-      checkbox.checked = false;
-  });
-});
-document.getElementById('crearUsuarioForm').addEventListener('submit', async function(event) {
-    event.preventDefault();
-    
-    const submitBtn = document.getElementById('submitBtn');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Creando...';
-
-    const formData = new FormData(this);
-    try {
-        const response = await fetch('{{ url_for("crear_usuario") }}', {
-            method: 'POST',
-            body: formData
-        });
-        const data = await response.json();
-
-        if (data.status === 'success') {
-            alert(data.message);
-            window.location.href = '{{ url_for("menu") }}';
-        } else {
-            alert(data.message);
-        }
-    } catch (error) {
-        console.error('Error al enviar el formulario:', error);
-        alert('Hubo un error al crear el usuario.');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Crear Usuario';
-    }
-});
-
-// formulario de creación de usuarios.
-
-function actualizarTiendas() {
-    const tiendasPorCliente = {
-        "99": [{ id: 0, nombre: "Dummy" }],
-        "1": [
-            { id: 0, nombre: "Dummy" },
-            { id: 1, nombre: "Ahumada" },
-            { id: 2, nombre: "Costanera Center" },
-            { id: 3, nombre: "Parque Arauco" }
-        ],
-        "2": [
-            { id: 0, nombre: "Dummy" },
-            { id: 4, nombre: "Ahumada" }
-        ],
-        "3": [{ id: 0, nombre: "Dummy" }],  // Sin tiendas asignadas
-        "4": [
-            { id: 0, nombre: "Dummy" },
-            { id: 1, nombre: "Parque Arauco" },
-            { id: 2, nombre: "Costanera Center" }
-        ]
-    };
-
-    const idCliente = document.getElementById('id_clt')?.value;
-    const idTdaSelect = document.getElementById('id_tda');
-    
-    if (!idCliente || !idTdaSelect) {
-        console.warn("No se pudo encontrar el elemento id_clt o id_tda");
-        return;
-    }
-
-    idTdaSelect.innerHTML = ''; 
-
-    if (tiendasPorCliente[idCliente]) {
-        tiendasPorCliente[idCliente].forEach(tienda => {
-            const option = document.createElement('option');
-            option.value = tienda.id;
-            option.textContent = tienda.nombre;
-            idTdaSelect.appendChild(option);
-        });
-    } else {
-        const dummyOption = document.createElement('option');
-        dummyOption.value = '0';
-        dummyOption.textContent = 'Dummy';
-        idTdaSelect.appendChild(dummyOption);
-    }
-}
-
-// Asegúrate de que `actualizarTiendas` se ejecute cuando se cambie el cliente
-document.addEventListener("DOMContentLoaded", function() {
-    const idClienteSelect = document.getElementById('id_clt');
-    if (idClienteSelect) {
-        idClienteSelect.addEventListener('change', actualizarTiendas);
-    } else {
-        console.warn("El elemento con id 'id_clt' no se encontró en el DOM.");
-    }
-});
-
-// Envío del formulario de creación de usuarios
-
-document.getElementById('crearUsuarioForm').addEventListener('submit', async function(event) {
-    event.preventDefault();
-
-    const submitBtn = document.getElementById('submitBtn');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Creando...';
-
-    const formData = new FormData(this);
-    try {
-        const response = await fetch('/mod/mAdmcreusr', {
-            method: 'POST',
-            body: formData
-        });
-
-        const contentType = response.headers.get("content-type");
-        let data;
-        if (contentType && contentType.includes("application/json")) {
-            data = await response.json();
-        } else {
-            throw new Error("La respuesta no es JSON.");
-        }
-
-        // Mostrar el mensaje en el contenedor dentro del HTML
-        const mensajeConfirmacion = document.getElementById('mensajeConfirmacion');
-        mensajeConfirmacion.textContent = data.message;
-        mensajeConfirmacion.style.display = 'block';
-
-        // Cambia la clase según el estado de la respuesta
-        if (data.status === 'success') {
-            mensajeConfirmacion.classList.add('alert-success');
-            mensajeConfirmacion.classList.remove('alert-danger');
-        } else {
-            mensajeConfirmacion.classList.add('alert-danger');
-            mensajeConfirmacion.classList.remove('alert-success');
-        }
-    } catch (error) {
-        console.error('Error al enviar el formulario:', error);
-        const mensajeConfirmacion = document.getElementById('mensajeConfirmacion');
-        mensajeConfirmacion.textContent = 'Hubo un error al crear el usuario.';
-        mensajeConfirmacion.classList.add('alert-danger');
-        mensajeConfirmacion.style.display = 'block';
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Crear Usuario';
-    }
+    // Registrar eventos adicionales
+    registrarEventosModulo(); // Registro de eventos para carga inicial
+    registrarEventoCrearUsuario(); // Registro para formulario de creación de usuario
 });

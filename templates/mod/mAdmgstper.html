@@ -1,108 +1,174 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administracion, Gestión de Perfiles de Acceso </title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_menu.css') }}">
-</head>
-<body>
-<div class="container2">
-    <h1>Gestión de Perfiles de Acceso</h1>
-    <br>
-
-</br>
-
-    <form id="configForm">
-
-        <!-- Nombre del Archivo -->
-        <label for="archivo">Nombre del Archivo:</label>
-        <input type="text" id="archivo" name="archivo" placeholder="Ingrese el nombre del archivo">
-
-        <!-- Formato -->
-        <label for="formato">Formato del Archivo:</label>
-        <select id="formato" name="formato">
-            <option value="excel">Excel</option>
-            <option value="csv">CSV</option>
-            <option value="txt">TXT</option>
-        </select>
-
-        <!-- Separación de caracteres -->
-        <label for="separacion">Separación de Caracteres:</label>
-        <input type="text" id="separacion" name="separacion" placeholder="Ingrese el separador de caracteres">
-
-        <!-- Campos que se deben leer -->
-        <div class="dynamic-fields" id="dynamicFields">
-            <label>Campos que se deben leer desde el archivo:</label>
-            <div class="field">
-                <div class="field">
-                    <div>
-                        <input type="text" placeholder="Nombre del campo" name="campo[]">
-                    </div>
-                    <div>
-                        <select name="tipoDato[]">
-                            <option value="text">Texto</option>
-                            <option value="integer">Entero</option>
-                            <option value="decimal">Decimal</option>
-                        </select>
-                    </div>
-                    <div>
-                        <select name="obligatorio[]">
-                            <option value="si">Sí</option>
-                            <option value="no">No</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de Accesos por Perfil</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style_menucons.css') }}"
+    />
+  </head>
+  <body>
+    <div class="modulo">
+      <h1>Gestión de Accesos por Perfil</h1>
+      <form id="accesoForm" method="POST">
+        <div class="form-group">
+          <label for="id_prf">Seleccionar Perfil:</label>
+          <select id="id_prf" name="id_prf" required>
+            <option value="" disabled selected>Seleccione un perfil</option>
+            {% for perfil in perfiles %}
+            <option value="{{ perfil.id_prf }}">{{ perfil.dsc }}</option>
+            {% endfor %}
+          </select>
+          <button type="button" id="consultar-modulos">
+            Consultar Módulos
+          </button>
         </div>
 
-        <buttoN type="buttoN" class="add-field" onclick="agregarCampo()">Agregar Campo</buttoN>
+        <div class="form-group">
+          <label>Módulos Disponibles:</label>
+          <div id="modulos-container" class="modulos-container">
+            <!-- Aquí se mostrarán los módulos disponibles en forma de lista -->
+          </div>
+        </div>
 
-        <!-- Frecuencia de Ejecución -->
-        <label for="frecuencia">Frecuencia de Ejecución:</label>
-        <input type="text" id="frecuencia" name="frecuencia" placeholder="Ingrese la frecuencia de ejecución">
+        <div class="form-actions">
+          <button type="button" onclick="guardarAccesos()">
+            Guardar Accesos
+          </button>
+          <button type="button" onclick="window.location.href='/menu'">
+            Cancelar
+          </button>
+        </div>
+      </form>
 
-        <!-- Fecha de Próxima Ejecución -->
-        <label for="fecha">Fecha de Próxima Ejecución:</label>
-        <input type="date" id="fecha" name="fecha">
+      <div id="popup" style="display: none">
+        <div class="popup-content">
+          <span id="popup-message"></span>
+          <button onclick="closePopup()">Cerrar</button>
+        </div>
+      </div>
+    </div>
 
-        <!-- Botones de Guardar y Cancelar -->
-        <buttoN type="submit">Guardar Configuración</buttoN>
-        <buttoN type="buttoN" class="delete-field" onclick="limpiarFormulario()">Cancelar</buttoN>
-    </form>
-</div>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const consultarModulosBtn =
+          document.getElementById("consultar-modulos");
+        if (consultarModulosBtn) {
+          consultarModulosBtn.addEventListener("click", function (event) {
+            event.preventDefault();
+            cargarModulosPorPerfil();
+          });
+        }
+      });
 
-<script>
-    function agregarCampo() {
-        // Crear nuevo grupo de campos
-        const campoHTML = `
-            <div class="field">
-                <div class="field-group">
-                    <div>
-                        <input type="text" placeholder="Nombre del campo" name="campo[]">
-                    </div>
-                    <div>
-                        <select name="tipoDato[]">
-                            <option value="text">Texto</option>
-                            <option value="integer">Entero</option>
-                            <option value="decimal">Decimal</option>
-                        </select>
-                    </div>
-                    <div>
-                        <select name="obligatorio[]">
-                            <option value="si">Sí</option>
-                            <option value="no">No</option>
-                        </select>
-                    </div>
-                </div>
-            </div>`;
-        document.getElementById('dynamicFields').insertAdjacentHTML('beforeend', campoHTML);
-    }
+      async function cargarModulosPorPerfil() {
+        const idPerfilElement = document.getElementById("id_prf");
+        const modulosContainer = document.getElementById("modulos-container");
+        const idPerfil = idPerfilElement.value;
+        modulosContainer.innerHTML = "";
 
-    function limpiarFormulario() {
-        document.getElementById("configForm").reset();
-    }
-</script>
+        if (!idPerfil) {
+          alert(
+            "Por favor, seleccione un perfil antes de consultar los módulos."
+          );
+          return;
+        }
 
-</body>
+        // Almacenar temporalmente el perfil seleccionado en sessionStorage
+        sessionStorage.setItem("perfilSeleccionado", idPerfil);
+        console.log(
+          "ID de Perfil seleccionado almacenado en sessionStorage:",
+          idPerfil
+        );
+
+        try {
+          const response = await fetch(`/mod/mAdmgstper?id_prf=${idPerfil}`);
+
+          if (!response.ok) {
+            throw new Error("Error en la respuesta del servidor");
+          }
+
+          const data = await response.json();
+
+          if (data.status === "success") {
+            data.modulos.forEach((modulo) => {
+              const checkboxContainer = document.createElement("div");
+              checkboxContainer.classList.add("modulo-item");
+
+              const checkbox = document.createElement("input");
+              checkbox.type = "checkbox";
+              checkbox.name = "modulos";
+              checkbox.value = modulo.id_modulo;
+
+              const label = document.createElement("label");
+              label.textContent = modulo.desc_modulo;
+
+              checkboxContainer.appendChild(checkbox);
+              checkboxContainer.appendChild(label);
+              modulosContainer.appendChild(checkboxContainer);
+            });
+          } else {
+            console.error("Error al obtener módulos:", data.message);
+          }
+        } catch (error) {
+          console.error("Error al cargar módulos:", error);
+          alert(
+            "Hubo un problema al cargar los módulos. Por favor, intenta de nuevo."
+          );
+        }
+      }
+
+      function guardarAccesos() {
+        const modulosSeleccionados = Array.from(
+          document.querySelectorAll('input[name="modulos"]:checked')
+        ).map((input) => input.value);
+        const perfilSeleccionado = sessionStorage.getItem("perfilSeleccionado");
+
+        if (!perfilSeleccionado || modulosSeleccionados.length === 0) {
+          alert(
+            "Por favor, seleccione un perfil y al menos un módulo antes de guardar."
+          );
+          return;
+        }
+
+        console.log("Guardando los accesos:");
+        console.log("Perfil:", perfilSeleccionado);
+        console.log("Módulos:", modulosSeleccionados);
+
+        // Aquí puedes enviar los datos al backend usando fetch o XMLHttpRequest
+        fetch("/guardar-accesos", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            perfil: perfilSeleccionado,
+            modulos: modulosSeleccionados,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "success") {
+              alert("Accesos guardados correctamente.");
+              sessionStorage.removeItem("perfilSeleccionado");
+            } else {
+              alert("Error al guardar los accesos.");
+            }
+          })
+          .catch((error) => {
+            console.error("Error al guardar accesos:", error);
+            alert("Hubo un problema al guardar los accesos.");
+          });
+      }
+
+      function closePopup() {
+        const popup = document.getElementById("popup");
+        if (popup) {
+          popup.style.display = "none";
+        }
+      }
+    </script>
+  </body>
 </html>

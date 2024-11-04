@@ -1,7 +1,0 @@
-# Inicialización de los Blueprints en el paquete 'app_routes'
-from .auth import bp as auth_bp
-from .menu import bp as menu_bp
-from .modulos import bp as modulos_bp
-
-# Lista de Blueprints para registrarse en app.py
-bp = [auth_bp, menu_bp, modulos_bp]
