@@ -383,7 +383,7 @@ footer {
     border-color: #f5c6cb;
 }
 /* Estilos para el popup */
-.popup {
+/* .popup {
     position: fixed;
     top: 0;
     left: 0;
@@ -408,8 +408,29 @@ footer {
 
 .popup-content button {
     margin-top: 10px;
+} */
+#popup {
+    position: fixed; /* Fijo solo dentro del área de contenido del módulo */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 20px;
+    z-index: 1000;
 }
 
+.popup-content {
+    text-align: center;
+}
+
+.success {
+    color: green;
+}
+
+.error {
+    color: red;
+}
 .hidden {
     display: none;
 }
@@ -441,17 +462,40 @@ footer {
 /* Iconos de Botones en la Barra Superior */
 .icon-buttons {
     display: flex;
-    gap: 15px;
+    gap: 10px; /* Prueba reduciendo el gap para acercarlos más */
+    align-items: center; /* Asegura que los elementos estén centrados verticalmente */
 }
 
 .icon-btn {
     color: var(--text-color-bar);
-    font-size: 1.5em;
+    font-size: 24px;
+    padding: 4px; /* Reduce un poco el padding si es necesario */
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centra los iconos horizontalmente */
+    transition: color 0.3s;
+}
+#theme-toggle {
+    text-decoration: none; /* Elimina el subrayado solo para el botón de cambiar tema */
+    color: var(--text-color-bar);
+    font-size: 24px;
+    padding: 4px; /* Reduce un poco el padding si es necesario */
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centra los iconos horizontalmente */
+    transition: color 0.3s;
+}
+
+/* .icon-btn {
+    color: var(--text-color-bar);
+    font-size: 24px;
+    padding: 8px;
     text-decoration: none;
     display: flex;
     align-items: center;
     transition: color 0.3s;
-}
+} */
 
 .icon-btn:hover {
     color: var(--submenu-hover-bg-color);
@@ -538,4 +582,75 @@ footer {
     max-width: 250px;
     height: 150px;
     margin: 0 auto;
+}
+
+/*Reporte dashboard2*/
+
+.report-sidebar, .report-view {
+    background-color: #f5f5f5;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.report-sidebar {
+    width: 300px;
+}
+
+.report-view {
+    flex: 1;
+    padding: 20px;
+    background-color: #fff;
+}
+
+.report-field-list h3, .report-chart-container h3 {
+    margin-top: 0;
+}
+
+.report-field-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+}
+
+.report-table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 10px;
+}
+
+
+.totals-row {
+    font-weight: bold;
+}
+
+.report-chart-container {
+    margin-top: 30px;
+    display: none;
+}
+
+.report-chart-container canvas {
+    width: 100%;
+    max-width: 600px;
+    height: 300px;
+}
+
+.report-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.report-icon-btn {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.report-icon-btn:hover {
+    background-color: var(--button-hover-bg-color);
 }

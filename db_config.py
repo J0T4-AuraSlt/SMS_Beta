@@ -29,7 +29,7 @@ def close_db_connection(conn):
     if conn:
         db_pool.putconn(conn)
 
-
+# 03/11
 # import psycopg2
 # from psycopg2 import pool
 # import logging

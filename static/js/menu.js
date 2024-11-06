@@ -1,31 +1,32 @@
 console.log("menu.js cargado correctamente"); 
 
-function cargarModulo(url) {
-    fetch(url)
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error("La respuesta de la red no era correcta");
-            }
-            return response.text();
-        })
-        .then((data) => {
-            document.querySelector(".content").innerHTML = data; // Cargar contenido en el área de contenido
+// 05/11/24
+// function cargarModulo(url) {
+//     fetch(url)
+//         .then((response) => {
+//             if (!response.ok) {
+//                 throw new Error("La respuesta de la red no era correcta");
+//             }
+//             return response.text();
+//         })
+//         .then((data) => {
+//             document.querySelector(".content").innerHTML = data; // Cargar contenido en el área de contenido
 
-            // Espera breve antes de registrar eventos para asegurar que el DOM esté listo
-            setTimeout(() => {
-                registrarEventosModulo();
-                registrarEventoCrearUsuario();  // Registrar el evento submit para crear usuario
-            }, 50);
-        })
-        .catch((error) => {
-            console.error("Hubo un problema con la solicitud Fetch:", error);
-            document.querySelector(".content").innerHTML = "<p>Error al cargar el módulo</p>";
-        });
-}
+//             // Espera breve antes de registrar eventos para asegurar que el DOM esté listo
+//             setTimeout(() => {
+//                 registrarEventosModulo();
+//                 registrarEventoCrearUsuario();  // Registrar el evento submit para crear usuario
+//             }, 50);
+//         })
+//         .catch((error) => {
+//             console.error("Hubo un problema con la solicitud Fetch:", error);
+//             document.querySelector(".content").innerHTML = "<p>Error al cargar el módulo</p>";
+//         });
+// }
 
-function saveCurrentModule(url) {
-    sessionStorage.setItem("lastModule", url); // Guardar la URL del módulo actual
-}
+// function saveCurrentModule(url) {
+//     sessionStorage.setItem("lastModule", url); // Guardar la URL del módulo actual
+// }
 
 function registrarEventosModulo() {
     console.log("Intentando registrar eventos para el módulo cargado"); // Debug log
@@ -223,14 +224,82 @@ function renderSalesChart() {
         }
     });
 }
+// Creacion de usuario document.addEventListener("DOMContentLoaded", registrarEventoCrearUsuario);
 
+// function registrarEventoCrearUsuario() {
+//     const crearUsuarioForm = document.getElementById("crearUsuarioForm");
+//     if (crearUsuarioForm) {
+//         crearUsuarioForm.addEventListener("submit", async function (event) {
+//             event.preventDefault();
+//             prepararDatos();
 
-function registrarEventoCrearUsuario() {
+//             const submitBtn = document.getElementById("submitBtn");
+//             submitBtn.disabled = true;
+//             submitBtn.textContent = "Creando...";
+
+//             const formData = new FormData(this);
+
+//             try {
+//                 const response = await fetch("/mod/mAdmcreusr", {
+//                     method: "POST",
+//                     body: formData,
+//                     headers: {
+//                         "X-Requested-With": "XMLHttpRequest"
+//                     },
+//                 });
+
+//                 if (response.ok) {
+//                     const result = await response.json();
+//                     showPopup(result.message, result.status === "success" ? "success" : "error");
+//                 } else {
+//                     showPopup("Error en la creación, verifique los campos ingresados.", "error");
+//                 }
+//             } catch (error) {
+//                 showPopup("Hubo un error al crear el usuario.", "error");
+//             } finally {
+//                 submitBtn.disabled = false;
+//                 submitBtn.textContent = "Crear Usuario";
+//             }
+//         });
+//     }
+// }
+
+// function showPopup(message, type = 'success') {
+//     const popup = document.getElementById("popup");
+//     const popupMessage = document.getElementById("popup-message");
+
+//     popupMessage.innerText = message;
+//     popup.className = `fade-in ${type}`;
+//     popup.style.display = "block";
+
+//     setTimeout(() => {
+//         popup.classList.add("fade-out");
+//         setTimeout(() => {
+//             popup.style.display = "none";
+//             popup.classList.remove("fade-in", "fade-out", "success", "error");
+//         }, 300);
+//     }, 3000);
+// }
+
+// function prepararDatos() {
+//     const rutCompleto = document.getElementById("rut").value;
+//     const [rut, dv] = rutCompleto.split("-");
+//     document.getElementById("rut_usr").value = rut || "";
+//     document.getElementById("dv_usr").value = dv || "";
+
+//     const apellidos = document.getElementById("apellidos").value.split(" ");
+//     document.getElementById("ape_pat_usr").value = apellidos[0] || "";
+//     document.getElementById("ape_mat_usr").value = apellidos[1] || "";
+// }
+
+//Propuesta 30 del GPT
+document.addEventListener("DOMContentLoaded", () => {
     const crearUsuarioForm = document.getElementById("crearUsuarioForm");
+    
     if (crearUsuarioForm) {
-        crearUsuarioForm.addEventListener("submit", async function (event) {
+        crearUsuarioForm.addEventListener("submit", async function(event) {
             event.preventDefault();
-            prepararDatos();
+            prepararDatos(); // Procesar RUT y Apellidos
 
             const submitBtn = document.getElementById("submitBtn");
             submitBtn.disabled = true;
@@ -239,7 +308,7 @@ function registrarEventoCrearUsuario() {
             const formData = new FormData(this);
 
             try {
-                const response = await fetch("/mod/mAdmcreusr", {
+                const response = await fetch(this.action, {  
                     method: "POST",
                     body: formData,
                     headers: {
@@ -247,11 +316,12 @@ function registrarEventoCrearUsuario() {
                     },
                 });
 
-                if (response.ok && response.headers.get("content-type").includes("application/json")) {
-                    const data = await response.json();
+                const data = await response.json();
+                if (response.ok) {
+                    // Aquí mostramos solo el mensaje en el pop-up
                     showPopup(data.message, data.status === "success" ? "success" : "error");
                 } else {
-                    showPopup("Error en la creacion, verifique los campos ingresados.", "error");
+                    showPopup("Error en la creación, verifique los campos ingresados.", "error");
                 }
             } catch (error) {
                 console.error("Error al enviar el formulario:", error);
@@ -262,35 +332,131 @@ function registrarEventoCrearUsuario() {
             }
         });
     }
-}
+});
 
-function prepararDatos() {
-    const rutCompleto = document.getElementById("rut").value;
-    const [rut, dv] = rutCompleto.split("-");
-    document.getElementById("rut_usr").value = rut || "";
-    document.getElementById("dv_usr").value = dv || "";
-
-    const apellidos = document.getElementById("apellidos").value.split(" ");
-    document.getElementById("ape_pat_usr").value = apellidos[0] || "";
-    document.getElementById("ape_mat_usr").value = apellidos[1] || "";
-}
-
-function showPopup(message, type = 'success') {
+// Función para mostrar solo el mensaje en un pop-up o en pantalla
+function showPopup(message, status) {
     const popup = document.getElementById("popup");
     const popupMessage = document.getElementById("popup-message");
 
-    popupMessage.innerText = message;
-    popup.className = `fade-in ${type}`;
+    popupMessage.textContent = message;
+    popup.classList.remove("success", "error");
+    popup.classList.add(status);
     popup.style.display = "block";
 
     setTimeout(() => {
-        popup.classList.add("fade-out");
-        setTimeout(() => {
-            popup.style.display = "none";
-            popup.classList.remove("fade-in", "fade-out", "success", "error");
-        }, 300);
+        popup.style.display = "none";
     }, 3000);
 }
+
+function closePopup() {
+    document.getElementById("popup").style.display = "none";
+}
+
+function prepararDatos() {
+    const rut = document.getElementById("rut").value;
+    const [rutNum, dv] = rut.split("-");
+    document.getElementById("rut_usr").value = rutNum;
+    document.getElementById("dv_usr").value = dv;
+
+    const apellidos = document.getElementById("apellidos").value.split(" ");
+    document.getElementById("ape_pat_usr").value = apellidos[0];
+    document.getElementById("ape_mat_usr").value = apellidos[1] || "";
+}
+
+// creación de usuarios, version new
+// function registrarEventoCrearUsuario() {
+//     const crearUsuarioForm = document.getElementById("crearUsuarioForm");
+//     if (crearUsuarioForm) {
+//         crearUsuarioForm.addEventListener("submit", async function (event) {
+//             event.preventDefault(); // Evita el envío normal del formulario
+//             prepararDatos();
+
+//             const submitBtn = document.getElementById("submitBtn");
+//             submitBtn.disabled = true;
+//             submitBtn.textContent = "Creando...";
+
+//             const formData = new FormData(this);
+
+//             try {
+//                 const response = await fetch("/mod/mAdmcreusr", {
+//                     method: "POST",
+//                     body: formData,
+//                     headers: {
+//                         "X-Requested-With": "XMLHttpRequest" // Indica una solicitud AJAX
+//                     },
+//                 });
+
+//                 // Verifica que la respuesta sea JSON
+//                 if (response.ok && response.headers.get("content-type").includes("application/json")) {
+//                     const data = await response.json();
+//                     if (data.status === "success") {
+//                         showPopup("Usuario creado con éxito", "success");
+//                     } else {
+//                         showPopup(data.message || "Error en la creación del usuario", "error");
+//                     }
+//                 } else {
+//                     showPopup("Error en la creación, verifique los campos ingresados.", "error");
+//                 }
+//             } catch (error) {
+//                 console.error("Error al enviar el formulario:", error);
+//                 showPopup("Hubo un error al crear el usuario.", "error");
+//             } finally {
+//                 submitBtn.disabled = false;
+//                 submitBtn.textContent = "Crear Usuario";
+//             }
+//         });
+//     }
+// }
+
+// function showPopup(message, type) {
+//     const popup = document.getElementById("popup");
+//     const popupMessage = document.getElementById("popup-message");
+
+//     popupMessage.textContent = message;
+//     popupMessage.className = type; // Añadir clase para estilos de éxito o error
+//     popup.style.display = "block"; // Muestra el pop-up
+
+//     // Cierra el pop-up automáticamente después de unos segundos
+//     setTimeout(() => {
+//         popup.style.display = "none";
+//     }, 3000);
+// }
+
+// function closePopup() {
+//     const popup = document.getElementById("popup");
+//     popup.style.display = "none";
+// }
+
+// function prepararDatos() {
+//     const rutCompleto = document.getElementById("rut").value;
+//     const [rut, dv] = rutCompleto.split("-");
+//     document.getElementById("rut_usr").value = rut || "";
+//     document.getElementById("dv_usr").value = dv || "";
+
+//     const apellidos = document.getElementById("apellidos").value.split(" ");
+//     document.getElementById("ape_pat_usr").value = apellidos[0] || "";
+//     document.getElementById("ape_mat_usr").value = apellidos[1] || "";
+// }
+
+// function showPopup(message, type = 'success') {
+//     const popup = document.getElementById("popup");
+//     const popupMessage = document.getElementById("popup-message");
+
+//     popupMessage.innerText = message;
+//     popup.className = `fade-in ${type}`;
+//     popup.style.display = "block";
+
+//     setTimeout(() => {
+//         popup.classList.add("fade-out");
+//         setTimeout(() => {
+//             popup.style.display = "none";
+//             popup.classList.remove("fade-in", "fade-out", "success", "error");
+//         }, 300);
+//     }, 3000);
+// }
+
+
 // Configuración del gráfico de "Product Statistic"
 const productStatCtx = document.getElementById('product-stat-chart').getContext('2d');
 new Chart(productStatCtx, {
@@ -515,3 +681,206 @@ document.addEventListener("DOMContentLoaded", function () {
     registrarEventosModulo(); // Registro de eventos para carga inicial
     registrarEventoCrearUsuario(); // Registro para formulario de creación de usuario
 });
+
+// Modulo Restablecer Usuarios
+// Función para cargar el módulo solo cuando el usuario lo seleccione en el menú
+function cargarModulo(url) {
+    fetch(url)
+        .then((response) => {
+            if (!response.ok) throw new Error("La respuesta de la red no era correcta");
+            return response.text();
+        })
+        .then((data) => {
+            document.querySelector(".content").innerHTML = data;
+
+            // Observador para esperar a que el módulo esté completamente cargado
+            const observer = new MutationObserver((mutations, obs) => {
+                if (document.querySelector("#userTable tbody")) {  // Confirma que el tbody de la tabla está en el DOM
+                    obs.disconnect();
+                    obtenerUsuarios(); // Llama a la función para cargar los usuarios solo si el módulo es madmrstpwd
+                }
+            });
+            observer.observe(document.querySelector(".content"), { childList: true, subtree: true });
+        })
+        .catch((error) => {
+            console.error("Hubo un problema con la solicitud Fetch:", error);
+            document.querySelector(".content").innerHTML = "<p>Error al cargar el módulo</p>";
+        });
+}
+
+// Función para obtener usuarios (solo se usa cuando se carga el módulo de usuarios)
+async function obtenerUsuarios() {
+    try {
+        const response = await fetch('http://127.0.0.1:5000/api/api_get_users');
+        
+        if (!response.ok) {
+            throw new Error("Error en la conexión con el servidor");
+        }
+        
+        const result = await response.json();
+        console.log(result);  // Verificación de datos en la consola
+
+        if (result.status === 'success' && result.data) {
+            populateTable(result.data);
+        } else {
+            alert('Error al cargar los usuarios.');
+        }
+    } catch (error) {
+        console.error('Error en la solicitud:', error);
+        alert('No se pudo conectar con el servidor.');
+    }
+}
+
+// Función para llenar la tabla con los usuarios obtenidos
+function populateTable(users) {
+    const tbody = document.querySelector('#userTable tbody'); 
+
+    if (!tbody) {
+        console.error("El elemento <tbody> no se encontró en el DOM. Verifica el id 'userTable' en el HTML.");
+        return;
+    }
+
+    tbody.innerHTML = ''; 
+
+    users.forEach(user => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="checkbox" value="${user.usuario}"></td>
+            <td>${user.usuario}</td>
+            <td>${user.nombre_completo}</td>
+            <td>${user.email}</td>
+            <td>${user.rut_usr}</td>
+            <td>${user.tienda_usr}</td>
+            <td>${user.status}</td>
+            <td>${user.perfil || 'N/A'}</td>
+            <td>${user.fecha_ult_cambio}</td>
+            <td>${user.fecha_expira}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Almacenar el módulo actual en sessionStorage
+function saveCurrentModule(url) {
+    sessionStorage.setItem("lastModule", url);
+}
+
+async function executeAction(action) {
+    const selectedUsers = Array.from(document.querySelectorAll('#userTable input[type="checkbox"]:checked')).map(input => input.value);
+    
+    if (selectedUsers.length === 0) {
+        alert('Por favor, selecciona al menos un usuario.');
+        return;
+    }
+
+    const data = { action, users: selectedUsers };
+
+    // Si la acción es "reset_password", pedir nueva contraseña
+    if (action === 'reset_password') {
+        const newPassword = prompt('Ingresa la nueva contraseña:');
+        if (!newPassword) {
+            alert("Contraseña no ingresada.");
+            return;
+        }
+        data.newPassword = newPassword;
+    }
+    
+    try {
+        const response = await fetch('/api/manage_user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (result.status === 'success') {
+            alert(result.message);
+            location.reload(); // Recargar la lista de usuarios después de la acción
+        } else {
+            alert('Error en la acción: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error en la solicitud:', error);
+        alert('No se pudo realizar la acción.');
+    }
+}
+// // Escuchar el evento DOMContentLoaded y cargar el módulo de usuarios
+// document.addEventListener('DOMContentLoaded', () => {
+//     cargarModulo('/mod/mAdmrstpwd'); // Carga inicial del módulo
+// });
+
+// function cargarModulo(url) {
+//     fetch(url)
+//         .then((response) => {
+//             if (!response.ok) throw new Error("La respuesta de la red no era correcta");
+//             return response.text();
+//         })
+//         .then((data) => {
+//             document.querySelector(".content").innerHTML = data;
+
+//             // Observador para esperar a que el módulo esté completamente cargado
+//             const observer = new MutationObserver((mutations, obs) => {
+//                 if (document.querySelector("#userTable tbody")) {  // Confirma que el tbody de la tabla está en el DOM
+//                     obs.disconnect();
+//                     obtenerUsuarios(); // Llama a la función para cargar los usuarios
+//                 }
+//             });
+//             observer.observe(document.querySelector(".content"), { childList: true, subtree: true });
+//         })
+//         .catch((error) => {
+//             console.error("Hubo un problema con la solicitud Fetch:", error);
+//             document.querySelector(".content").innerHTML = "<p>Error al cargar el módulo</p>";
+//         });
+// }
+
+// // Función para obtener usuarios
+// async function obtenerUsuarios() {
+//     try {
+//         const response = await fetch('http://127.0.0.1:5000/api/api_get_users');
+        
+//         if (!response.ok) {
+//             throw new Error("Error en la conexión con el servidor");
+//         }
+        
+//         const result = await response.json();
+//         console.log(result);  // Verificación de datos en la consola
+
+//         if (result.status === 'success' && result.data) {
+//             populateTable(result.data);
+//         } else {
+//             alert('Error al cargar los usuarios.');
+//         }
+//     } catch (error) {
+//         console.error('Error en la solicitud:', error);
+//         alert('No se pudo conectar con el servidor.');
+//     }
+// }
+
+// // Función para llenar la tabla con los usuarios obtenidos
+// function populateTable(users) {
+//     const tbody = document.querySelector('#userTable tbody'); 
+
+//     if (!tbody) {
+//         console.error("El elemento <tbody> no se encontró en el DOM. Verifica el id 'userTable' en el HTML.");
+//         return;
+//     }
+
+//     tbody.innerHTML = ''; 
+
+//     users.forEach(user => {
+//         const row = document.createElement('tr');
+//         row.innerHTML = `
+//             <td><input type="checkbox" value="${user.usuario}"></td>
+//             <td>${user.usuario}</td>
+//             <td>${user.nombre_completo}</td>
+//             <td>${user.email}</td>
+//             <td>${user.rut_usr}</td>
+//             <td>${user.tienda_usr}</td>
+//             <td>${user.status}</td>
+//             <td>${user.perfil || 'N/A'}</td>
+//             <td>${user.fecha_ult_cambio}</td>
+//             <td>${user.fecha_expira}</td>
+//         `;
+//         tbody.appendChild(row);
+//     });
+// }

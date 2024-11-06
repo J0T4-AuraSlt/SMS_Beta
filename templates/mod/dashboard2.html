@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard de Reportes Dinámicos</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style_menucons.css') }}"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  </head>
+  <body>
+    <!-- Sidebar de Campos -->
+    <div class="report-sidebar">
+      <h3>Campos Disponibles</h3>
+      <div class="report-field-list">
+        <h4>Artículos</h4>
+        <div class="report-field-item">
+          <input type="checkbox" data-field="articulos.producto" /> Producto
+        </div>
+        <div class="report-field-item">
+          <input type="checkbox" data-field="articulos.categoria" /> Categoría
+        </div>
+
+        <h4>Ventas</h4>
+        <div class="report-field-item">
+          <input type="checkbox" data-field="ventas.fecha_venta" /> Fecha Venta
+        </div>
+        <div class="report-field-item">
+          <input type="checkbox" data-field="ventas.cantidad" /> Cantidad
+        </div>
+        <div class="report-field-item">
+          <input type="checkbox" data-field="ventas.total" /> Total
+        </div>
+
+        <h4>Inventario</h4>
+        <div class="report-field-item">
+          <input type="checkbox" data-field="inventario.stock" /> Stock
+        </div>
+        <div class="report-field-item">
+          <input type="checkbox" data-field="inventario.tienda" /> Tienda
+        </div>
+      </div>
+
+      <!-- Botón para Generar Tabla y Gráfico -->
+      <div class="report-actions">
+        <button class="report-icon-btn" onclick="updateTable()">
+          Generar Tabla
+        </button>
+        <button class="report-icon-btn" onclick="generateChart()">
+          Generar Gráfico
+        </button>
+      </div>
+    </div>
+
+    <!-- Vista del Reporte -->
+    <div class="report-view">
+      <h3>Vista Previa del Reporte</h3>
+      <div class="report-table-container">
+        <table id="reportTable" class="display" style="width: 100%">
+          <thead>
+            <tr id="tableHeaders"></tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+          <tfoot id="tableFooters"></tfoot>
+        </table>
+      </div>
+
+      <!-- Contenedor de Gráficos -->
+      <div class="report-chart-container" id="chartContainer">
+        <h3>Gráfico de Ventas</h3>
+        <canvas id="chartCanvas"></canvas>
+        <button class="report-icon-btn" onclick="downloadChart()">
+          Descargar Gráfico
+        </button>
+      </div>
+
+      <!-- Botones de Descarga de Tabla -->
+      <div class="report-actions">
+        <button class="report-icon-btn" onclick="exportToPDF()">
+          Descargar PDF
+        </button>
+        <button class="report-icon-btn" onclick="exportToCSV()">
+          Descargar CSV
+        </button>
+        <button class="report-icon-btn" onclick="exportToExcel()">
+          Descargar Excel
+        </button>
+      </div>
+    </div>
+
+    <!-- Scripts necesarios -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+  </body>
+</html>

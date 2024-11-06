@@ -1,68 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restablecer Contraseña</title>
-    <link rel="icon" href="{{ url_for('static', filename='imagen/favicon-vivo.png') }}" type="image/x-icon"> <!-- Agregar favicon -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_login.css') }}">    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Incluye jQuery -->
-</head>
-<body>
-    <div class="form-container">
-        <h1>Restablecer Contraseña</h1>
-
-        <form id="reset-password-form">
-            <div class="input-group">
-                <label for="email">Correo Electrónico</label>
-                <input type="email" id="email" name="email" placeholder="Ingresa tu correo" required>
-            </div>
-
-            <button type="submit" class="center-button">Enviar</button>
-        </form>
-
-        <!-- Popup que se mostrará con el mensaje -->
-        <div id="popup-message" style="display: none; padding: 20px; border: 1px solid #ccc; background-color: #f0f0f0; text-align: center; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 999;">
-            <p id="popup-text"></p>
-            <button onclick="closePopup()">Cerrar</button>
-        </div>
-
-        <div class="back-to-login">
-            <a href="{{ url_for('index') }}" class="back-link">Volver al inicio de sesión</a>
-        </div>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Gestión de Usuarios</title>
+  </head>
+  <body>
+    <div class="module-content">
+      <h1>Gestión de Usuarios</h1>
+      <div>
+        <button onclick="executeAction('enable')">Habilitar</button>
+        <button onclick="executeAction('disable')">Deshabilitar</button>
+        <button onclick="executeAction('reset_password')">
+          Cambio Contraseña
+        </button>
+      </div>
+      <table id="userTable">
+        <thead>
+          <tr>
+            <th>Seleccionar</th>
+            <th>Usuario</th>
+            <th>Nombre Completo</th>
+            <th>Email</th>
+            <th>RUT</th>
+            <th>Tienda</th>
+            <th>Status</th>
+            <th>Perfil</th>
+            <th>Último Cambio</th>
+            <th>Expiración</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <!-- Asegúrate de que el ID esté correcto -->
+      </table>
     </div>
-
-    <script>
-        // Función para cerrar el popup
-        function closePopup() {
-            $('#popup-message').hide();
-        }
-
-        $(document).ready(function() {
-            // Manejo del envío del formulario por AJAX
-            $('#reset-password-form').on('submit', function(e) {
-                e.preventDefault(); // Prevenir el envío tradicional del formulario
-
-                $.ajax({
-                    url: '/mod/reset_password',  // La ruta donde se enviarán los datos
-                    method: 'POST',
-                    dataType: 'json',
-                    data: { email: $('#email').val() },  // Enviar el email
-                    success: function(response) {
-                        // Mostrar el popup con el mensaje de éxito
-                        $('#popup-text').text(response.message);
-                        $('#popup-message').show();
-                    },
-                    error: function() {
-                        // Mostrar el popup con un mensaje de error en caso de fallo
-                        $('#popup-text').text('Hubo un error al enviar el formulario.');
-                        $('#popup-message').show();
-                    }
-                });
-            });
-        });
-    </script>
-</body>
-<footer>
-    <p>© 2024 Todos los derechos reservados.</p>
-</footer>
+    <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+  </body>
 </html>

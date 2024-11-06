@@ -10,108 +10,166 @@
     />
   </head>
   <body>
-    <div class="modulo">
-      <h1>Creación de Usuario</h1>
-      <form id="crearUsuarioForm" method="POST">
-        <div class="form-group">
-          <label for="id_clt">Cliente:</label>
-          <select id="id_clt" name="id_clt" required>
-            <option value="" disabled selected>Seleccione un Cliente</option>
-            <option value="99">Clte. de Pruebas</option>
-            <option value="1">Falabella</option>
-            <option value="2">La Polar</option>
-            <option value="3">ABCDIN</option>
-            <option value="4">Vivo</option>
-          </select>
+    <div class="container">
+      <div class="form-container">
+        <h1>Creación de Usuario</h1>
+        <form
+          id="crearUsuarioForm"
+          method="POST"
+          action="{{ url_for('crear_usuario') }}"
+          enctype="multipart/form-data"
+        >
+          <!-- Cliente -->
+          <div class="form-group">
+            <label for="id_clt">Cliente</label>
+            <select id="id_clt" name="id_clt" required>
+              <option value="" disabled selected>Seleccione un Cliente</option>
+              <option value="99">Clte. de Pruebas</option>
+              <option value="1">Falabella</option>
+              <option value="2">La Polar</option>
+              <option value="3">ABCDIN</option>
+              <option value="4">Vivo</option>
+            </select>
+          </div>
+
+          <!-- Tienda -->
+          <div class="form-group">
+            <label for="id_tda">Tienda</label>
+            <select id="id_tda" name="id_tda" required>
+              <option value="0">Dummy</option>
+            </select>
+          </div>
+
+          <!-- Perfil -->
+          <div class="form-group">
+            <label for="id_prf">Perfil</label>
+            <select id="id_prf" name="id_prf" required>
+              <option value="" disabled selected>Seleccione un Perfil</option>
+              <option value="0">Jefe de Tienda</option>
+              <option value="1">Gerente de Tienda</option>
+              <option value="2">Supervisor</option>
+              <option value="3">Vendedor</option>
+              <option value="5">Promotor</option>
+              <option value="6">Cajero</option>
+              <option value="4">Super Usuario</option>
+            </select>
+          </div>
+
+          <!-- RUT -->
+          <div class="form-group">
+            <label for="rut">RUT</label>
+            <input
+              type="text"
+              id="rut"
+              name="rut"
+              placeholder="Ej: 12345678-K"
+              required
+              pattern="^\d{1,8}-[Kk0-9]{1}$"
+              title="Ingrese un RUT válido con formato 12345678-K"
+            />
+          </div>
+
+          <!-- Nombres -->
+          <div class="form-group">
+            <label for="nomb_usr">Nombres</label>
+            <input
+              type="text"
+              id="nomb_usr"
+              name="nomb_usr"
+              placeholder="Ingrese nombres"
+              required
+            />
+          </div>
+
+          <!-- Apellidos -->
+          <div class="form-group">
+            <label for="apellidos">Apellidos</label>
+            <input
+              type="text"
+              id="apellidos"
+              name="apellidos"
+              placeholder="Ej: Pérez González"
+              required
+            />
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label for="ema_usr">Email</label>
+            <input
+              type="email"
+              id="ema_usr"
+              name="ema_usr"
+              placeholder="usuario@ejemplo.com"
+              required
+            />
+          </div>
+
+          <!-- Teléfono -->
+          <div class="form-group">
+            <label for="cel_usr">Teléfono (celular)</label>
+            <input
+              type="tel"
+              id="cel_usr"
+              name="cel_usr"
+              placeholder="Ej: 987654321"
+              required
+              pattern="^\d{9}$"
+              title="Debe contener 9 dígitos"
+            />
+          </div>
+
+          <!-- Contraseña -->
+          <div class="form-group">
+            <label for="pwd">Contraseña</label>
+            <input
+              type="password"
+              id="pwd"
+              name="pwd"
+              placeholder="Mínimo 8 caracteres"
+              required
+              pattern="(?=.*[A-Za-zñÑ])(?=.*\d)(?=.*[@$!%*?&])[A-Za-zñÑ\d@$!%*?&]{8,}"
+              title="Debe contener al menos 8 caracteres, una letra, un número y un carácter especial."
+            />
+          </div>
+
+          <!-- Imagen (opcional) -->
+          <div class="form-group">
+            <label for="imagen">Imagen (opcional)</label>
+            <input type="file" id="imagen" name="imagen" accept="image/*" />
+          </div>
+
+          <!-- Campos Ocultos para RUT y Apellidos Separados -->
+          <input type="hidden" id="rut_usr" name="rut_usr" />
+          <input type="hidden" id="dv_usr" name="dv_usr" />
+          <input type="hidden" id="ape_pat_usr" name="ape_pat_usr" />
+          <input type="hidden" id="ape_mat_usr" name="ape_mat_usr" />
+
+          <!-- Botones -->
+          <div class="form-actions">
+            <button id="submitBtn" type="submit" class="btn btn-primary">
+              Crear Usuario
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="window.history.back();"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Popup de Confirmación -->
+      <div id="popup" style="display: none">
+        <div class="popup-content">
+          <span id="popup-message"></span>
+          <button onclick="closePopup()">Cerrar</button>
         </div>
-
-        <div class="form-group">
-          <label for="id_tda">Tienda:</label>
-          <select id="id_tda" name="id_tda" required>
-            <option value="0">Dummy</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="id_prf">Perfil:</label>
-          <select id="id_prf" name="id_prf" required>
-            <option value="" disabled selected>Seleccione un Perfil</option>
-            <option value="0">Jefe de Tienda</option>
-            <option value="1">Gerente de Tienda</option>
-            <option value="2">Supervisor</option>
-            <option value="3">Vendedor</option>
-            <option value="5">Promotor</option>
-            <option value="6">Cajero</option>
-            <option value="4">Super Usuario</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="rut">RUT:</label>
-          <input
-            type="text"
-            id="rut"
-            name="rut"
-            required
-            placeholder="Ej: 12345678-K"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="nomb_usr">Nombres:</label>
-          <input type="text" id="nomb_usr" name="nomb_usr" required />
-        </div>
-
-        <div class="form-group">
-          <label for="apellidos">Apellidos:</label>
-          <input
-            type="text"
-            id="apellidos"
-            name="apellidos"
-            required
-            placeholder="Ej: Pérez González"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="ema_usr">Email:</label>
-          <input type="email" id="ema_usr" name="ema_usr" required />
-        </div>
-
-        <div class="form-group">
-          <label for="cel_usr">Teléfono (celular):</label>
-          <input type="text" id="cel_usr" name="cel_usr" required />
-        </div>
-
-        <div class="form-group">
-          <label for="pwd">Contraseña:</label>
-          <input type="password" id="pwd" name="pwd" required />
-        </div>
-
-        <div class="form-group">
-          <label for="imagen">Imagen:</label>
-          <input type="file" id="imagen" name="imagen" />
-        </div>
-
-        <!-- Campos Ocultos para RUT y Apellidos Separados -->
-        <input type="hidden" id="rut_usr" name="rut_usr" />
-        <input type="hidden" id="dv_usr" name="dv_usr" />
-        <input type="hidden" id="ape_pat_usr" name="ape_pat_usr" />
-        <input type="hidden" id="ape_mat_usr" name="ape_mat_usr" />
-
-        <div class="form-actions">
-          <button id="submitBtn" type="submit">Crear Usuario</button>
-          <button type="button" class="cancel">Cancelar</button>
-        </div>
-      </form>
-    </div>
-
-    <!-- Popup de Confirmación -->
-    <div id="popup" style="display: none">
-      <div class="popup-content">
-        <span id="popup-message"></span>
-        <button onclick="closePopup()">Cerrar</button>
       </div>
     </div>
+
+    <script src="{{ url_for('static', filename='js/mAdmcreusr.js') }}"></script>
   </body>
 </html>
